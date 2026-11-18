@@ -1,0 +1,31 @@
+{
+  "name": "@modern-maps/routing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@modern-maps/geospatial": "workspace:*",
+    "@modern-maps/types": "workspace:*",
+    "@modern-maps/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@modern-maps/testing": "workspace:*",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  }
+}

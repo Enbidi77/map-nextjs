@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@modern-maps/types": ["./packages/types/src/index.ts"],
+      "@modern-maps/validation": ["./packages/validation/src/index.ts"],
+      "@modern-maps/geospatial": ["./packages/geospatial/src/index.ts"],
+      "@modern-maps/testing": ["./packages/testing/src/index.ts"],
+      "@modern-maps/testing/*": ["./packages/testing/src/*"],
+      "@modern-maps/ui": ["./packages/ui/src/index.ts"],
+      "@modern-maps/map-engine": ["./packages/map-engine/src/index.ts"],
+      "@modern-maps/place-search": ["./packages/place-search/src/index.ts"],
+      "@modern-maps/routing": ["./packages/routing/src/index.ts"]
+    }
+  }
+}

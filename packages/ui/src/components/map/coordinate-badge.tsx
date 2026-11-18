@@ -1,0 +1,154 @@
+import * as React from 'react';
+import { Copy, Check, MapPin } from 'lucide-react';
+import { cn } from '../../lib/utils.js';
+
+export interface CoordinateBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  longitude: number;
+  latitude: number;
+  zoom?: number;
+  pitch?: number;
+  bearing?: number;
+  scaleText?: string;
+  format?: 'decimal' | 'dms';
+  showCopyButton?: boolean;
+  showElevation?: boolean;
+  elevation?: number;
+}
+
+/**
+ * Formats a decimal degree coordinate into human-readable hemisphere notation.
+ */
+function formatCoordDecimal(lat: number, lng: number, precision: number = 4): string {
+  const latHemi = lat >= 0 ? 'N' : 'S';
+  const lngHemi = lng >= 0 ? 'E' : 'W';
+  return `${Math.abs(lat).toFixed(precision)}° ${latHemi}, ${Math.abs(lng).toFixed(precision)}° ${lngHemi}`;
+}
+
+/**
+ * Formats coordinates into degrees, minutes, and seconds (DMS).
+ */
+function toDms(deg: number, isLat: boolean): string {
+  const absolute = Math.abs(deg);
+  const degrees = Math.floor(absolute);
+  const minutesNotTruncated = (absolute - degrees) * 60;
+  const minutes = Math.floor(minutesNotTruncated);
+  const seconds = Math.floor((minutesNotTruncated - minutes) * 60);
+  const direction = isLat ? (deg >= 0 ? 'N' : 'S') : deg >= 0 ? 'E' : 'W';
+  return `${degrees}°${minutes}′${seconds}″${direction}`;
+}
+
+export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeProps>(
+  (
+    {
+      className,
+      longitude,
+      latitude,
+      zoom,
+      pitch,
+      bearing,
+      scaleText,
+      format = 'decimal',
+      showCopyButton = true,
+      showElevation = false,
+      elevation,
+      ...props
+    },
+    ref
+  ) => {
+    const [copied, setCopied] = React.useState(false);
+
+    const formattedCoords =
+      format === 'dms'
+        ? `${toDms(latitude, true)} ${toDms(longitude, false)}`
+        : formatCoordDecimal(latitude, longitude);
+
+    const copyCoords = async () => {
+      try {
+        await navigator.clipboard.writeText(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // Fallback or ignore
+      }
+    };
+
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-2.5 py-1 text-xs text-foreground shadow-sm backdrop-blur-md select-none transition-all',
+          className
+        )}
+        {...props}
+      >
+        {/* Coordinates */}
+        <div className="flex items-center gap-1 font-mono text-[11px]">
+          <MapPin className="h-3 w-3 text-primary shrink-0" />
+          <span className="truncate">{formattedCoords}</span>
+        </div>
+
+        {/* Copy Button */}
+        {showCopyButton && (
+          <button
+            type="button"
+            onClick={copyCoords}
+            className="flex h-5 w-5 items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Copy coordinates"
+            aria-label="Copy coordinates"
+          >
+            {copied ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+          </button>
+        )}
+
+        {/* Zoom */}
+        {zoom !== undefined && (
+          <>
+            <span className="text-border">|</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              z: {zoom.toFixed(1)}
+            </span>
+          </>
+        )}
+
+        {/* Pitch & Bearing (when 3D/rotated) */}
+        {((pitch && pitch > 0) || (bearing && bearing !== 0)) && (
+          <>
+            <span className="text-border">|</span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {pitch && pitch > 0 ? `P: ${Math.round(pitch)}° ` : ''}
+              {bearing && bearing !== 0 ? `B: ${Math.round(bearing)}°` : ''}
+            </span>
+          </>
+        )}
+
+        {/* Elevation */}
+        {showElevation && elevation !== undefined && (
+          <>
+            <span className="text-border">|</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {Math.round(elevation)}m
+            </span>
+          </>
+        )}
+
+        {/* Scale bar */}
+        {scaleText && (
+          <>
+            <span className="text-border">|</span>
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] font-mono leading-none text-muted-foreground">
+                {scaleText}
+              </span>
+              <div className="mt-0.5 h-[2px] w-8 bg-foreground/60" />
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+);
+CoordinateBadge.displayName = 'CoordinateBadge';
