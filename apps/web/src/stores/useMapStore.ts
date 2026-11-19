@@ -5,6 +5,8 @@ import { MOCK_PLACES } from '../data/mockPlaces';
 
 export type SidebarView = 'search' | 'place' | 'directions' | 'saved';
 export type TransitMode = 'driving' | 'walking' | 'cycling' | 'transit';
+export type AppViewMode = 'dashboard' | 'map';
+export type NavPillId = 'home' | 'explore' | 'directions' | 'saved' | 'layers' | 'settings';
 
 export interface OverlayLayerState {
   id: string;
@@ -53,6 +55,13 @@ interface MapStoreState {
   // Active Base Style
   activeStyle: string;
   setActiveStyle: (styleId: string) => void;
+
+  // View Mode: Fusion Dashboard Overview vs Full Interactive Map Canvas
+  viewMode: AppViewMode;
+  setViewMode: (mode: AppViewMode) => void;
+  toggleViewMode: () => void;
+  activeNavPill: NavPillId;
+  setActiveNavPill: (pill: NavPillId) => void;
 
   // Sidebar Layout
   sidebarOpen: boolean;
@@ -160,6 +169,14 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   // Style
   activeStyle: 'streets',
   setActiveStyle: (activeStyle) => set({ activeStyle }),
+
+  // View Mode
+  viewMode: 'dashboard',
+  setViewMode: (viewMode) => set({ viewMode }),
+  toggleViewMode: () =>
+    set((state) => ({ viewMode: state.viewMode === 'dashboard' ? 'map' : 'dashboard' })),
+  activeNavPill: 'home',
+  setActiveNavPill: (activeNavPill) => set({ activeNavPill }),
 
   // Sidebar
   sidebarOpen: true,

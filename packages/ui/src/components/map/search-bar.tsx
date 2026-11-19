@@ -14,12 +14,14 @@ export interface SearchBarProps
   showDirectionsButton?: boolean;
   onDirectionsClick?: () => void;
   rightSlot?: React.ReactNode;
+  variant?: 'default' | 'glass';
 }
 
 export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
   (
     {
       className,
+      variant = 'default',
       value: controlledValue,
       defaultValue = '',
       onChange,
@@ -75,10 +77,15 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
       onKeyDown?.(e);
     };
 
+    const isGlass = variant === 'glass';
+
     return (
       <div
         className={cn(
-          'group relative flex w-full items-center rounded-xl border border-border/70 bg-background/90 px-3 py-1.5 shadow-md backdrop-blur-md transition-all duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
+          'group relative flex w-full items-center transition-all duration-200',
+          isGlass
+            ? 'rounded-2xl border border-white/40 dark:border-white/15 bg-white/75 dark:bg-zinc-900/70 px-4 py-2 shadow-xl shadow-black/5 dark:shadow-black/25 backdrop-blur-2xl focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/15'
+            : 'rounded-xl border border-border/70 bg-background/90 px-3 py-1.5 shadow-md backdrop-blur-md focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
           className
         )}
       >
@@ -108,7 +115,10 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           <button
             type="button"
             onClick={handleClear}
-            className="mr-1.5 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-90"
+            className={cn(
+              'mr-1.5 rounded-full p-1 text-muted-foreground transition-colors active:scale-90',
+              isGlass ? 'hover:bg-white/40 dark:hover:bg-white/10 hover:text-foreground' : 'hover:bg-muted hover:text-foreground'
+            )}
             aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
@@ -117,7 +127,14 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
 
         {/* Shortcut Badge */}
         {!value && shortcut && (
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <kbd
+            className={cn(
+              'hidden sm:inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground',
+              isGlass
+                ? 'border border-white/30 dark:border-white/10 bg-white/40 dark:bg-white/10'
+                : 'border border-border/80 bg-muted/60'
+            )}
+          >
             {shortcut}
           </kbd>
         )}
@@ -127,7 +144,12 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           <button
             type="button"
             onClick={onDirectionsClick}
-            className="ml-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20 active:scale-95"
+            className={cn(
+              'ml-1.5 flex h-7 w-7 items-center justify-center transition-colors active:scale-95',
+              isGlass
+                ? 'rounded-xl bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20 shadow-sm'
+                : 'rounded-lg bg-primary/10 text-primary hover:bg-primary/20'
+            )}
             title="Directions"
             aria-label="Directions"
           >

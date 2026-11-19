@@ -12,17 +12,22 @@ import {
 
 export interface ThemeToggleProps {
   className?: string;
-  variant?: 'toggle' | 'dropdown';
+  variant?: 'toggle' | 'dropdown' | 'glass';
   size?: 'default' | 'sm' | 'icon' | 'icon-sm';
+  glass?: boolean;
 }
 
 export function ThemeToggle({
   className,
   variant = 'dropdown',
   size = 'icon',
+  glass = false,
 }: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+
+  const isGlass = glass || variant === 'glass';
+  const buttonVariant = isGlass ? 'glass' : 'ghost';
 
   // Avoid hydration mismatch
   React.useEffect(() => {
@@ -32,9 +37,9 @@ export function ThemeToggle({
   if (!mounted) {
     return (
       <Button
-        variant="ghost"
+        variant={buttonVariant}
         size={size}
-        className={cn('text-muted-foreground opacity-50', className)}
+        className={cn('text-muted-foreground opacity-50', isGlass && 'rounded-full', className)}
         aria-label="Toggle theme"
         disabled
       >
@@ -43,11 +48,11 @@ export function ThemeToggle({
     );
   }
 
-  if (variant === 'toggle') {
+  if (variant === 'toggle' || variant === 'glass') {
     const isDark = resolvedTheme === 'dark';
     return (
       <Button
-        variant="ghost"
+        variant={isGlass ? 'glass-pill' : 'ghost'}
         size={size}
         className={cn('text-foreground transition-transform hover:scale-105', className)}
         onClick={() => setTheme(isDark ? 'light' : 'dark')}
@@ -66,7 +71,7 @@ export function ThemeToggle({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant={isGlass ? 'glass-pill' : 'ghost'}
           size={size}
           className={cn('relative', className)}
           aria-label="Select theme"

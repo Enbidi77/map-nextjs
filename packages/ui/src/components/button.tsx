@@ -15,6 +15,8 @@ export const buttonVariants = cva(
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
         map: 'bg-background/90 text-foreground border border-border/60 shadow-md backdrop-blur-md hover:bg-accent hover:text-accent-foreground active:scale-[0.96]',
+        glass: 'bg-white/70 dark:bg-zinc-900/70 text-foreground border border-white/40 dark:border-white/15 shadow-sm backdrop-blur-xl hover:bg-white/90 dark:hover:bg-zinc-800/80 hover:shadow-md hover:border-white/60 dark:hover:border-white/25 active:scale-[0.98]',
+        'glass-pill': 'rounded-full bg-white/70 dark:bg-zinc-900/70 text-foreground border border-white/40 dark:border-white/15 shadow-sm backdrop-blur-xl hover:bg-white/90 dark:hover:bg-zinc-800/80 hover:shadow-md hover:border-white/60 dark:hover:border-white/25 active:scale-[0.98]',
       },
       size: {
         default: 'h-9 px-4 py-2',

@@ -35,6 +35,15 @@
     --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.75rem;
+
+    /* Fusion UI Glass Tokens */
+    --fusion-glass-bg: rgba(255, 255, 255, 0.72);
+    --fusion-glass-border: rgba(255, 255, 255, 0.4);
+    --fusion-glass-subtle: rgba(255, 255, 255, 0.45);
+    --fusion-glass-card-bg: rgba(255, 255, 255, 0.65);
+    --fusion-glass-pill-bg: rgba(255, 255, 255, 0.85);
+    --fusion-glass-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    --fusion-glass-glow: 0 0 24px rgba(59, 130, 246, 0.25);
   }
 
   .dark {
@@ -65,6 +74,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    /* Fusion UI Glass Tokens (Dark) */
+    --fusion-glass-bg: rgba(18, 24, 38, 0.68);
+    --fusion-glass-border: rgba(255, 255, 255, 0.12);
+    --fusion-glass-subtle: rgba(255, 255, 255, 0.06);
+    --fusion-glass-card-bg: rgba(20, 27, 45, 0.6);
+    --fusion-glass-pill-bg: rgba(30, 41, 59, 0.75);
+    --fusion-glass-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    --fusion-glass-glow: 0 0 28px rgba(59, 130, 246, 0.35);
   }
 }
 
@@ -98,6 +116,82 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Fusion UI Utilities */
+@layer utilities {
+  .fusion-glass {
+    background: var(--fusion-glass-bg);
+    border: 1px solid var(--fusion-glass-border);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--fusion-glass-shadow);
+  }
+
+  .fusion-card {
+    background: var(--fusion-glass-card-bg);
+    border: 1px solid var(--fusion-glass-border);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    box-shadow: var(--fusion-glass-shadow);
+    border-radius: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fusion-card:hover {
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    transform: translateY(-2px);
+  }
+  .dark .fusion-card:hover {
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+
+  .fusion-pill {
+    background: var(--fusion-glass-pill-bg);
+    border: 1px solid var(--fusion-glass-border);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 9999px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .fusion-pill:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), var(--fusion-glass-glow);
+  }
+  .dark .fusion-pill:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), var(--fusion-glass-glow);
+  }
+
+  .fusion-glow {
+    box-shadow: var(--fusion-glass-glow);
+  }
+
+  .fusion-scenic-backdrop {
+    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15), transparent 45%),
+                radial-gradient(circle at 90% 10%, rgba(236, 72, 153, 0.12), transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.14), transparent 50%),
+                radial-gradient(circle at 80% 85%, rgba(14, 165, 233, 0.15), transparent 45%);
+  }
+
+  .fusion-specular {
+    position: relative;
+  }
+  .fusion-specular::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
+    opacity: 0.8;
+  }
+  .dark .fusion-specular::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%);
+    opacity: 0.6;
+  }
 }
 
 /* MapLibre canvas full size overrides */

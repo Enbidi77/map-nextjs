@@ -28,3 +28,6 @@ export * from './components/map/place-card.js';
 export * from './components/map/measurement-drawing-toolbar.js';
 export * from './components/map/maneuver-instruction-card.js';
 export * from './components/map/collection-card.js';
+
+// Fusion UI (Liquid Glass & Ambient Primitives)
+export * from './components/fusion/index.js';
