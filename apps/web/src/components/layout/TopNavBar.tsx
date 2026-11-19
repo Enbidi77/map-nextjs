@@ -11,6 +11,9 @@ import {
   Users,
   LogIn,
   LogOut,
+  Globe,
+  Check,
+  User,
 } from 'lucide-react';
 import {
   Button,
@@ -22,15 +25,20 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
   Tooltip,
   TooltipTrigger,
   TooltipContent,
   TooltipProvider,
+  cn,
 } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useResponsive } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../features/auth/useAuth';
 import { usePresence } from '../../features/realtime/usePresence';
+import { useTranslation } from '../../features/i18n';
 
 export interface TopNavBarProps {
   onToggleLayerSelector?: () => void;
@@ -53,6 +61,15 @@ export function TopNavBar({
 
   const { user, profile, openAuthModal, signOut } = useAuth();
   const { peers, isConnected } = usePresence();
+  const { locale, setLocale, t, languages } = useTranslation();
+  const currentLang =
+    languages.find((l) => l.code === locale) ||
+    languages[0] || {
+      code: 'en' as const,
+      name: 'English',
+      englishName: 'English',
+      flag: '🇺🇸',
+    };
 
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -77,7 +94,7 @@ export function TopNavBar({
           variant="ghost"
           size="icon-sm"
           onClick={toggleSidebar}
-          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          aria-label={sidebarOpen ? t('nav.collapseSidebar') : t('nav.expandSidebar')}
           className="text-muted-foreground hover:text-foreground"
         >
           {sidebarOpen ? (
@@ -107,10 +124,10 @@ export function TopNavBar({
           </div>
           <div className="hidden sm:flex flex-col leading-tight">
             <span className="font-bold text-sm tracking-tight text-foreground">
-              Modern Maps
+              {t('nav.brand')}
             </span>
             <span className="text-[10px] text-muted-foreground font-mono">
-              Geospatial Platform
+              {t('nav.subtitle')}
             </span>
           </div>
         </div>
@@ -138,7 +155,7 @@ export function TopNavBar({
             setSidebarOpen(true);
           }}
           placeholder={
-            isMobile ? 'Search places...' : 'Search places, coordinates, or addresses...'
+            isMobile ? t('nav.searchPlaceholderMobile') : t('nav.searchPlaceholder')
           }
           className="h-9 py-0 shadow-sm"
         />
@@ -159,10 +176,10 @@ export function TopNavBar({
             }
           }}
           className="gap-1.5 text-xs font-medium"
-          aria-label="Directions"
+          aria-label={t('nav.directions')}
         >
           <Navigation className="h-4 w-4 text-primary" />
-          <span className="hidden md:inline">Directions</span>
+          <span className="hidden md:inline">{t('nav.directions')}</span>
         </Button>
 
         {/* Saved Places Shortcut */}
@@ -178,10 +195,10 @@ export function TopNavBar({
             }
           }}
           className="relative gap-1.5 text-xs font-medium"
-          aria-label="Saved places"
+          aria-label={t('nav.savedPlaces')}
         >
           <Bookmark className="h-4 w-4 text-amber-500" />
-          <span className="hidden md:inline">Saved</span>
+          <span className="hidden md:inline">{t('nav.saved')}</span>
           {savedPlacesCount > 0 && (
             <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary/20 px-1 text-[10px] font-bold text-primary">
               {savedPlacesCount}
@@ -195,8 +212,8 @@ export function TopNavBar({
             variant={isLayerSelectorOpen ? 'secondary' : 'ghost'}
             size="icon-sm"
             onClick={onToggleLayerSelector}
-            aria-label="Map layers & styles"
-            title="Map layers & styles"
+            aria-label={t('nav.layersAndStyles')}
+            title={t('nav.layersAndStyles')}
           >
             <Layers className="h-4 w-4" />
           </Button>
@@ -208,7 +225,7 @@ export function TopNavBar({
             <TooltipTrigger asChild>
               <div
                 className="flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-xs select-none cursor-default transition-all hover:bg-muted/70"
-                aria-label={`Collaborative session: ${peers.length + 1} online`}
+                aria-label={`${t('nav.onlineSession')}: ${peers.length + 1} online`}
               >
                 <span
                   className={`h-2 w-2 rounded-full transition-colors ${
@@ -225,12 +242,12 @@ export function TopNavBar({
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
               <p className="font-semibold">
-                {isConnected ? 'Realtime Session Active' : 'Connecting to session...'}
+                {isConnected ? t('nav.sessionActive') : t('nav.sessionConnecting')}
               </p>
               <p className="text-[11px] opacity-80">
                 {peers.length === 0
-                  ? 'Only you are currently in this session.'
-                  : `${peers.length + 1} active collaborators online.`}
+                  ? t('nav.sessionSolo')
+                  : t('nav.sessionCollaborators', { count: peers.length + 1 })}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -247,7 +264,7 @@ export function TopNavBar({
                 variant="ghost"
                 size="icon-sm"
                 className="relative h-8 w-8 rounded-full border border-border/80 p-0 hover:ring-2 hover:ring-primary/20 overflow-hidden"
-                aria-label="User account menu"
+                aria-label={t('nav.userMenu')}
               >
                 {profile?.avatar_url ? (
                   <img
@@ -262,11 +279,11 @@ export function TopNavBar({
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-1">
+            <DropdownMenuContent align="end" className="w-56 p-1.5">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-xs font-semibold leading-none text-foreground truncate">
-                    {profile?.full_name || 'Signed In'}
+                    {profile?.full_name || t('nav.signedIn')}
                   </p>
                   <p className="text-[11px] leading-none text-muted-foreground truncate font-mono">
                     {user.email}
@@ -282,7 +299,7 @@ export function TopNavBar({
                 }}
               >
                 <Bookmark className="h-3.5 w-3.5 text-amber-500" />
-                <span>My Saved Places</span>
+                <span>{t('nav.mySavedPlaces')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer gap-2 text-xs"
@@ -292,28 +309,170 @@ export function TopNavBar({
                 }}
               >
                 <Compass className="h-3.5 w-3.5 text-primary" />
-                <span>Explore Map</span>
+                <span>{t('nav.exploreMap')}</span>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
+              {/* Language Sub-Menu (flies out left or right based on viewport space) */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="cursor-pointer gap-2 text-xs">
+                  <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{t('nav.language')}</span>
+                  <span className="ml-auto mr-1 text-[11px] text-muted-foreground font-mono">
+                    {currentLang.flag} {currentLang.name}
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-48 p-1" sideOffset={4} alignOffset={-5}>
+                  {languages.map((lang) => {
+                    const isSelected = lang.code === locale;
+                    return (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        className={cn(
+                          'cursor-pointer text-xs flex items-center justify-between rounded px-2 py-1.5 transition-colors',
+                          isSelected
+                            ? 'bg-primary/10 text-primary font-medium'
+                            : 'text-foreground hover:bg-accent'
+                        )}
+                        onSelect={() => {
+                          setLocale(lang.code);
+                        }}
+                        onClick={() => {
+                          setLocale(lang.code);
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {lang.code}
+                          </span>
+                          {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive"
                 onClick={() => signOut()}
               >
                 <LogOut className="h-3.5 w-3.5" />
-                <span>Sign Out</span>
+                <span>{t('nav.signOut')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => openAuthModal('signin')}
-            className="h-8 gap-1.5 px-3 text-xs font-medium shadow-sm"
-          >
-            <LogIn className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Sign In</span>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {/* Guest Avatar Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="relative h-8 w-8 rounded-full border border-border/80 p-0 hover:ring-2 hover:ring-primary/20 overflow-hidden"
+                  aria-label={t('nav.guestMenu')}
+                >
+                  <div className="flex h-full w-full items-center justify-center bg-muted/70 text-muted-foreground">
+                    <User className="h-4 w-4" />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-xs font-semibold leading-none text-foreground">
+                      {t('nav.guest')}
+                    </p>
+                    <p className="text-[11px] leading-none text-muted-foreground">
+                      {t('nav.guestPrompt')}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2 text-xs"
+                  onClick={() => {
+                    setSidebarView('search');
+                    setSidebarOpen(true);
+                  }}
+                >
+                  <Compass className="h-3.5 w-3.5 text-primary" />
+                  <span>{t('nav.exploreMap')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
+                {/* Language Sub-Menu (Guest) */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer gap-2 text-xs">
+                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{t('nav.language')}</span>
+                    <span className="ml-auto mr-1 text-[11px] text-muted-foreground font-mono">
+                      {currentLang.flag} {currentLang.name}
+                    </span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-48 p-1" sideOffset={4} alignOffset={-5}>
+                    {languages.map((lang) => {
+                      const isSelected = lang.code === locale;
+                      return (
+                        <DropdownMenuItem
+                          key={lang.code}
+                          className={cn(
+                            'cursor-pointer text-xs flex items-center justify-between rounded px-2 py-1.5 transition-colors',
+                            isSelected
+                              ? 'bg-primary/10 text-primary font-medium'
+                              : 'text-foreground hover:bg-accent'
+                          )}
+                          onSelect={() => {
+                            setLocale(lang.code);
+                          }}
+                          onClick={() => {
+                            setLocale(lang.code);
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{lang.flag}</span>
+                            <span>{lang.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground font-mono">
+                              {lang.code}
+                            </span>
+                            {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2 text-xs font-medium text-primary focus:text-primary"
+                  onClick={() => openAuthModal('signin')}
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  <span>{t('nav.signIn')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Guest Quick Sign In Button */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => openAuthModal('signin')}
+              className="h-8 gap-1.5 px-3 text-xs font-medium shadow-sm"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('nav.signIn')}</span>
+            </Button>
+          </div>
         )}
       </div>
     </header>

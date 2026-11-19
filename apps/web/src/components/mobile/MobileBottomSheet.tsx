@@ -5,8 +5,10 @@ import { ChevronUp } from 'lucide-react';
 import { useMapStore } from '../../stores/useMapStore';
 import { SidebarContent } from '../sidebar/SidebarContent';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import { useTranslation } from '../../features/i18n';
 
 export function MobileBottomSheet() {
+  const { t } = useTranslation();
   const { isMobile } = useResponsive();
   const sidebarView = useMapStore((state) => state.sidebarView);
   const selectedPlace = useMapStore((state) => state.selectedPlace);
@@ -36,7 +38,7 @@ export function MobileBottomSheet() {
         suppressHydrationWarning
         onClick={() => setExpanded(!expanded)}
         className="flex h-7 w-full items-center justify-center cursor-pointer select-none"
-        aria-label={expanded ? 'Minimize panel' : 'Expand panel'}
+        aria-label={expanded ? t('mobile.minimize') : t('mobile.expand')}
       >
         <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/50" />
       </button>
@@ -52,13 +54,13 @@ export function MobileBottomSheet() {
               {sidebarView === 'place' && selectedPlace
                 ? selectedPlace.name
                 : sidebarView === 'directions'
-                ? 'Directions Planner'
-                : 'Explore Nearby Places'}
+                ? t('mobile.directionsPlanner')
+                : t('mobile.exploreNearby')}
             </span>
             <span className="text-[11px] text-muted-foreground">
               {sidebarView === 'place' && selectedPlace
                 ? selectedPlace.address
-                : 'Swipe up or tap to view details'}
+                : t('mobile.swipeUp')}
             </span>
           </div>
           <ChevronUp className="h-4 w-4 text-muted-foreground animate-bounce" />

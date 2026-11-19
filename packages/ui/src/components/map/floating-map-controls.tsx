@@ -82,6 +82,19 @@ export const MapControlButton = React.forwardRef<
 );
 MapControlButton.displayName = 'MapControlButton';
 
+export interface FloatingMapControlsLabels {
+  zoomIn?: string;
+  zoomOut?: string;
+  orientNorth?: string;
+  resetBearing?: (bearing: number) => string;
+  switchTo2D?: string;
+  switchTo3D?: string;
+  findLocation?: string;
+  layers?: string;
+  enterFullscreen?: string;
+  exitFullscreen?: string;
+}
+
 export interface FloatingMapControlsProps extends React.HTMLAttributes<HTMLDivElement> {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   // Zoom
@@ -111,6 +124,8 @@ export interface FloatingMapControlsProps extends React.HTMLAttributes<HTMLDivEl
   showLayerToggle?: boolean;
   // Orientation
   orientation?: 'vertical' | 'horizontal';
+  // Localized Labels
+  labels?: FloatingMapControlsLabels;
 }
 
 const positionClasses: Record<string, string> = {
@@ -148,12 +163,25 @@ export const FloatingMapControls = React.forwardRef<
       isLayerMenuOpen = false,
       onToggleLayerMenu,
       showLayerToggle = true,
+      labels,
       children,
       ...props
     },
     ref
   ) => {
     const tooltipSide = position.includes('right') ? 'left' : 'right';
+
+    const zoomInLabel = labels?.zoomIn ?? 'Zoom in';
+    const zoomOutLabel = labels?.zoomOut ?? 'Zoom out';
+    const orientNorthLabel = labels?.orientNorth ?? 'Orient North';
+    const resetBearingLabel =
+      labels?.resetBearing?.(Math.round(bearing)) ?? `Reset Bearing (${Math.round(bearing)}°)`;
+    const switchTo2DLabel = labels?.switchTo2D ?? 'Switch to 2D view';
+    const switchTo3DLabel = labels?.switchTo3D ?? 'Switch to 3D perspective';
+    const findLocationLabel = labels?.findLocation ?? 'Find my location';
+    const layersLabel = labels?.layers ?? 'Map layers & styles';
+    const enterFullscreenLabel = labels?.enterFullscreen ?? 'Enter fullscreen';
+    const exitFullscreenLabel = labels?.exitFullscreen ?? 'Exit fullscreen';
 
     return (
       <div
@@ -169,7 +197,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* Zoom controls */}
         {onZoomIn && (
           <MapControlButton
-            label="Zoom in"
+            label={zoomInLabel}
             shortcut="+"
             tooltipSide={tooltipSide}
             disabled={zoomDisabled}
@@ -179,7 +207,7 @@ export const FloatingMapControls = React.forwardRef<
         )}
         {onZoomOut && (
           <MapControlButton
-            label="Zoom out"
+            label={zoomOutLabel}
             shortcut="-"
             tooltipSide={tooltipSide}
             disabled={zoomDisabled}
@@ -201,7 +229,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* Compass / Reset North */}
         {showCompass && onResetBearing && (
           <MapControlButton
-            label={bearing === 0 ? 'Orient North' : `Reset Bearing (${Math.round(bearing)}°)`}
+            label={bearing === 0 ? orientNorthLabel : resetBearingLabel}
             shortcut="N"
             tooltipSide={tooltipSide}
             onClick={onResetBearing}
@@ -217,7 +245,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* 3D Tilt / Pitch Toggle */}
         {show3DToggle && onToggle3D && (
           <MapControlButton
-            label={is3D ? 'Switch to 2D view' : 'Switch to 3D perspective'}
+            label={is3D ? switchTo2DLabel : switchTo3DLabel}
             shortcut="3"
             tooltipSide={tooltipSide}
             active={is3D}
@@ -229,7 +257,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* Geolocation */}
         {showGeolocate && onGeolocate && (
           <MapControlButton
-            label="Find my location"
+            label={findLocationLabel}
             tooltipSide={tooltipSide}
             loading={isLocating}
             active={isLocationActive}
@@ -251,7 +279,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* Layers toggle */}
         {showLayerToggle && onToggleLayerMenu && (
           <MapControlButton
-            label="Map layers & styles"
+            label={layersLabel}
             shortcut="L"
             tooltipSide={tooltipSide}
             active={isLayerMenuOpen}
@@ -263,7 +291,7 @@ export const FloatingMapControls = React.forwardRef<
         {/* Fullscreen */}
         {showFullscreen && onToggleFullscreen && (
           <MapControlButton
-            label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            label={isFullscreen ? exitFullscreenLabel : enterFullscreenLabel}
             shortcut="F"
             tooltipSide={tooltipSide}
             active={isFullscreen}

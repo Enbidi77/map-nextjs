@@ -59,6 +59,13 @@ export const DEFAULT_MAP_STYLES: MapStyleOption[] = [
   },
 ];
 
+export interface LayerSelectorLabels {
+  title?: string;
+  baseStyles?: string;
+  overlays?: string;
+  opacity?: string;
+}
+
 export interface LayerSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
   styles?: MapStyleOption[];
   activeStyleId: string;
@@ -67,6 +74,7 @@ export interface LayerSelectorProps extends React.HTMLAttributes<HTMLDivElement>
   onToggleOverlay?: (overlayId: string, visible: boolean) => void;
   onOverlayOpacityChange?: (overlayId: string, opacity: number) => void;
   showOverlays?: boolean;
+  labels?: LayerSelectorLabels;
 }
 
 export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps>(
@@ -80,10 +88,16 @@ export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps
       onToggleOverlay,
       onOverlayOpacityChange,
       showOverlays = true,
+      labels,
       ...props
     },
     ref
   ) => {
+    const titleText = labels?.title ?? 'Map Styles & Layers';
+    const baseStylesText = labels?.baseStyles ?? 'Base Map Style';
+    const overlaysText = labels?.overlays ?? 'Overlay Layers';
+    const opacityText = labels?.opacity ?? 'Opacity';
+
     return (
       <Card
         ref={ref}
@@ -96,7 +110,7 @@ export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps
         <CardHeader className="p-4 pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
             <Layers className="h-4 w-4 text-primary" />
-            <span>Map Styles & Layers</span>
+            <span>{titleText}</span>
           </CardTitle>
         </CardHeader>
 
@@ -104,7 +118,7 @@ export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps
           {/* Base Map Styles Grid */}
           <div>
             <div className="mb-2 text-xs font-medium text-muted-foreground">
-              Base Map Style
+              {baseStylesText}
             </div>
             <div className="grid grid-cols-3 gap-2">
               {styles.map((style) => {
@@ -164,7 +178,7 @@ export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps
           {showOverlays && overlays.length > 0 && (
             <div className="border-t border-border/60 pt-3">
               <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                <span>Overlay Layers</span>
+                <span>{overlaysText}</span>
                 <Sliders className="h-3.5 w-3.5" />
               </div>
 
@@ -202,7 +216,7 @@ export const LayerSelector = React.forwardRef<HTMLDivElement, LayerSelectorProps
                     {/* Opacity Slider if visible */}
                     {overlay.visible && onOverlayOpacityChange && (
                       <div className="flex items-center gap-2 pt-1">
-                        <span className="text-[10px] text-muted-foreground">Opacity</span>
+                        <span className="text-[10px] text-muted-foreground">{opacityText}</span>
                         <Slider
                           value={[Math.round((overlay.opacity ?? 1) * 100)]}
                           min={10}

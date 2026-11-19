@@ -6,9 +6,11 @@ import { Button, ScrollArea } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { SidebarContent } from '../sidebar/SidebarContent';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import { useTranslation } from '../../features/i18n';
 
 export function ResizableSidebar() {
   const { isMobile } = useResponsive();
+  const { t } = useTranslation();
   const sidebarOpen = useMapStore((state) => state.sidebarOpen);
   const toggleSidebar = useMapStore((state) => state.toggleSidebar);
   const sidebarWidth = useMapStore((state) => state.sidebarWidth);
@@ -67,14 +69,14 @@ export function ResizableSidebar() {
           {/* Header Bar */}
           <div className="flex h-12 items-center justify-between border-b border-border/60 px-3 sm:px-4">
             <span className="font-semibold text-xs tracking-wider uppercase text-muted-foreground truncate mr-2">
-              Map Explorer
+              {t('sidebar.title')}
             </span>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={toggleSidebar}
               className="text-muted-foreground hover:text-foreground shrink-0"
-              aria-label="Collapse sidebar"
+              aria-label={t('sidebar.collapse')}
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
@@ -93,7 +95,7 @@ export function ResizableSidebar() {
             role="separator"
             aria-orientation="vertical"
             className="group absolute top-0 right-0 z-30 flex h-full w-2 translate-x-1 cursor-col-resize items-center justify-center hover:bg-primary/20 transition-colors"
-            title="Drag to resize sidebar"
+            title={t('sidebar.resize')}
           >
             <div className="h-8 w-1 rounded-full bg-border group-hover:bg-primary transition-colors" />
           </div>

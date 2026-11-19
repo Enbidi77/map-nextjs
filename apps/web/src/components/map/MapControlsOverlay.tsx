@@ -8,6 +8,7 @@ import {
   DEFAULT_MAP_STYLES,
 } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
+import { useTranslation } from '../../features/i18n';
 import type { MapRenderer } from '@modern-maps/map-engine';
 import type { Coordinate } from '@modern-maps/types';
 
@@ -24,6 +25,7 @@ export function MapControlsOverlay({
   isLayerSelectorOpen,
   onToggleLayerSelector,
 }: MapControlsOverlayProps) {
+  const { t } = useTranslation();
   const camera = useMapStore((state) => state.camera);
   const setCamera = useMapStore((state) => state.setCamera);
   const activeStyle = useMapStore((state) => state.activeStyle);
@@ -174,6 +176,18 @@ export function MapControlsOverlay({
         isLayerMenuOpen={isLayerSelectorOpen}
         onToggleLayerMenu={onToggleLayerSelector}
         showLayerToggle={true}
+        labels={{
+          zoomIn: t('map.zoomIn'),
+          zoomOut: t('map.zoomOut'),
+          orientNorth: t('map.orientNorth'),
+          resetBearing: (b) => t('map.resetBearing', { bearing: b }),
+          switchTo2D: t('map.switchTo2D'),
+          switchTo3D: t('map.switchTo3D'),
+          findLocation: t('map.findLocation'),
+          layers: t('map.layersAndStyles'),
+          enterFullscreen: t('map.enterFullscreen'),
+          exitFullscreen: t('map.exitFullscreen'),
+        }}
       />
 
       {/* Layer & Style Picker Popover (positioned next to controls) */}
@@ -189,6 +203,12 @@ export function MapControlsOverlay({
             onToggleOverlay={(id, visible) => toggleOverlay(id, visible)}
             onOverlayOpacityChange={(id, opacity) => setOverlayOpacity(id, opacity)}
             showOverlays={true}
+            labels={{
+              title: t('map.layersAndStyles'),
+              baseStyles: t('map.baseStyles'),
+              overlays: t('map.layersAndOverlays'),
+              opacity: t('map.opacity'),
+            }}
           />
         </div>
       )}
@@ -204,6 +224,8 @@ export function MapControlsOverlay({
           scaleText={scaleText}
           format="decimal"
           showCopyButton={true}
+          copyTitle={t('map.copyCoords')}
+          copiedTitle={t('map.copiedCoords')}
         />
       </div>
     </>

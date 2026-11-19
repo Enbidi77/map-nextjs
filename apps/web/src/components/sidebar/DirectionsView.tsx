@@ -16,10 +16,12 @@ import {
 } from 'lucide-react';
 import { Button, Input, ManeuverInstructionCard } from '@modern-maps/ui';
 import { useMapStore, type TransitMode } from '../../stores/useMapStore';
+import { useTranslation } from '../../features/i18n';
 import { MOCK_PLACES } from '../../data/mockPlaces';
 import type { PlaceSearchResult, Coordinate } from '@modern-maps/types';
 
 export function DirectionsView() {
+  const { t } = useTranslation();
   const directions = useMapStore((state) => state.directions);
   const setOrigin = useMapStore((state) => state.setOrigin);
   const setDestination = useMapStore((state) => state.setDestination);
@@ -146,9 +148,10 @@ export function DirectionsView() {
   };
 
   const handleUseCurrentLocation = () => {
+    const locLabel = t('directions.yourLocation');
     if (userLocation) {
-      setOrigin(userLocation, 'Current Location');
-      setOriginInput('Current Location');
+      setOrigin(userLocation, locLabel);
+      setOriginInput(locLabel);
     } else {
       const downtownSF: [number, number] = [-122.401, 37.789];
       setOrigin(downtownSF, 'Market St & Powell St');
@@ -186,7 +189,7 @@ export function DirectionsView() {
         setOrigin(resolved.coord, resolved.name);
         setOriginInput(resolved.name);
       } else {
-        setDirectionError(`Could not find location "${originInput}". Please choose from suggestions.`);
+        setDirectionError(t('directions.couldNotFind', { location: originInput }));
         return;
       }
     }
@@ -199,7 +202,7 @@ export function DirectionsView() {
         setDestination(resolved.coord, resolved.name);
         setDestInput(resolved.name);
       } else {
-        setDirectionError(`Could not find destination "${destInput}". Please choose from suggestions.`);
+        setDirectionError(t('directions.couldNotFindDest', { location: destInput }));
         return;
       }
     }
@@ -211,10 +214,10 @@ export function DirectionsView() {
   };
 
   const MODES: Array<{ mode: TransitMode; label: string; icon: React.ReactNode }> = [
-    { mode: 'driving', label: 'Drive', icon: <Car className="h-4 w-4" /> },
-    { mode: 'transit', label: 'Transit', icon: <Bus className="h-4 w-4" /> },
-    { mode: 'walking', label: 'Walk', icon: <Footprints className="h-4 w-4" /> },
-    { mode: 'cycling', label: 'Bike', icon: <Bike className="h-4 w-4" /> },
+    { mode: 'driving', label: t('directions.driving'), icon: <Car className="h-4 w-4" /> },
+    { mode: 'transit', label: t('directions.transit'), icon: <Bus className="h-4 w-4" /> },
+    { mode: 'walking', label: t('directions.walking'), icon: <Footprints className="h-4 w-4" /> },
+    { mode: 'cycling', label: t('directions.cycling'), icon: <Bike className="h-4 w-4" /> },
   ];
 
   const canCalculate =
@@ -278,7 +281,7 @@ export function DirectionsView() {
                       setActiveInput(null);
                     }
                   }}
-                  placeholder="Starting point..."
+                  placeholder={t('directions.originPlaceholder')}
                   className="h-8 pr-7 text-xs font-medium w-full min-w-0"
                 />
                 {isSearchingOrigin && (
@@ -338,7 +341,7 @@ export function DirectionsView() {
                       setActiveInput(null);
                     }
                   }}
-                  placeholder="Destination..."
+                  placeholder={t('directions.destPlaceholder')}
                   className="h-8 pr-7 text-xs font-medium w-full min-w-0"
                 />
                 {isSearchingDest && (
@@ -381,8 +384,8 @@ export function DirectionsView() {
               setDestInput(tmp);
             }}
             className="absolute right-1 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-background text-muted-foreground shadow-sm hover:bg-muted hover:text-foreground active:scale-95 transition-all"
-            title="Swap starting point and destination"
-            aria-label="Swap starting point and destination"
+            title={t('directions.swap')}
+            aria-label={t('directions.swap')}
           >
             <ArrowUpDown className="h-3.5 w-3.5" />
           </button>
@@ -405,7 +408,7 @@ export function DirectionsView() {
               className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <Navigation className="h-3 w-3 text-primary" />
-              <span>Use Current Location</span>
+              <span>{t('directions.useCurrentLocation')}</span>
             </button>
             <button
               type="button"
@@ -420,7 +423,7 @@ export function DirectionsView() {
         {/* Quick Destination Suggestions */}
         {!directions.destination && (
           <div className="flex flex-wrap gap-1.5 pt-1">
-            <span className="text-[10px] text-muted-foreground self-center">Popular:</span>
+            <span className="text-[10px] text-muted-foreground self-center">{t('directions.popular')}</span>
             {MOCK_PLACES.slice(0, 3).map((p) => (
               <button
                 key={p.id}
@@ -448,7 +451,7 @@ export function DirectionsView() {
             ) : (
               <Navigation className="h-3.5 w-3.5 shrink-0" />
             )}
-            <span className="truncate">{directions.isLoading ? 'Calculating...' : 'Get Directions'}</span>
+            <span className="truncate">{directions.isLoading ? t('directions.calculating') : t('directions.getDirections')}</span>
           </Button>
 
           {directions.isActive && (
@@ -457,10 +460,10 @@ export function DirectionsView() {
               size="sm"
               onClick={clearDirections}
               className="shrink-0 gap-1 text-xs text-muted-foreground hover:text-destructive px-2.5"
-              aria-label="Clear route"
+              aria-label={t('directions.clear')}
             >
               <X className="h-3.5 w-3.5" />
-              <span>Clear</span>
+              <span>{t('directions.clear')}</span>
             </Button>
           )}
         </div>
@@ -480,16 +483,23 @@ export function DirectionsView() {
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-lg sm:text-xl font-bold text-primary truncate">
                 {Math.floor((directions.durationSeconds ?? 0) / 3600) > 0
-                  ? `${Math.floor((directions.durationSeconds ?? 0) / 3600)} hr ${Math.round(
-                      ((directions.durationSeconds ?? 0) % 3600) / 60
-                    )} min`
-                  : `${Math.max(1, Math.round((directions.durationSeconds ?? 0) / 60))} min`}
+                  ? t('directions.hoursMinutes', {
+                      hours: Math.floor((directions.durationSeconds ?? 0) / 3600),
+                      minutes: Math.round(((directions.durationSeconds ?? 0) % 3600) / 60),
+                    })
+                  : t('directions.minutes', {
+                      minutes: Math.max(1, Math.round((directions.durationSeconds ?? 0) / 60)),
+                    })}
               </span>
               <span
                 className="text-xs text-muted-foreground truncate"
-                title={`${(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km via fastest route`}
+                title={t('directions.fastestRoute', {
+                  distance: `${(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km`,
+                })}
               >
-                {(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km ({(((directions.distanceMeters ?? 0) / 1000) * 0.621371).toFixed(1)} mi) via fastest route
+                {t('directions.fastestRoute', {
+                  distance: `${(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km`,
+                })}
               </span>
             </div>
             <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
@@ -501,7 +511,7 @@ export function DirectionsView() {
           <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 shadow-sm w-full min-w-0">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground pb-1 border-b border-border/50 w-full min-w-0">
               <Milestone className="h-4 w-4 text-primary shrink-0" />
-              <span className="truncate">Turn-by-turn guidance</span>
+              <span className="truncate">{t('directions.turnByTurn')}</span>
             </div>
 
             <div className="flex flex-col gap-2 pt-1 w-full min-w-0">

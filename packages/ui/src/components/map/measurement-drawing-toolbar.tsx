@@ -21,6 +21,18 @@ export type MeasurementDrawingMode =
   | 'line'
   | 'polygon';
 
+export interface MeasurementDrawingToolbarLabels {
+  distance?: string;
+  area?: string;
+  point?: string;
+  line?: string;
+  polygon?: string;
+  clickToStart?: string;
+  complete?: string;
+  clear?: string;
+  close?: string;
+}
+
 export interface MeasurementDrawingToolbarProps
   extends React.HTMLAttributes<HTMLDivElement> {
   activeMode: MeasurementDrawingMode;
@@ -34,6 +46,7 @@ export interface MeasurementDrawingToolbarProps
   pointsCount?: number;
   orientation?: 'horizontal' | 'vertical';
   position?: 'top-left' | 'top-right' | 'top-center' | 'bottom-center';
+  labels?: MeasurementDrawingToolbarLabels;
 }
 
 export const MeasurementDrawingToolbar = React.forwardRef<
@@ -54,6 +67,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
       pointsCount = 0,
       orientation = 'horizontal',
       position = 'top-center',
+      labels,
       ...props
     },
     ref
@@ -64,6 +78,18 @@ export const MeasurementDrawingToolbar = React.forwardRef<
       'top-center': 'top-4 left-1/2 -translate-x-1/2',
       'bottom-center': 'bottom-6 left-1/2 -translate-x-1/2',
     };
+
+    const distanceLabel = labels?.distance ?? 'Measure distance';
+    const areaLabel = labels?.area ?? 'Measure area';
+    const pointLabel = labels?.point ?? 'Draw point marker';
+    const lineLabel = labels?.line ?? 'Draw line / path';
+    const polygonLabel = labels?.polygon ?? 'Draw polygon shape';
+    const clickToStartText = labels?.clickToStart ?? 'Click map to start';
+    const completeLabel = labels?.complete ?? 'Complete';
+    const finishDrawingLabel = labels?.complete ?? 'Finish drawing';
+    const clearLabel = labels?.clear ?? 'Clear points';
+    const closeLabel = labels?.close ?? 'Close toolbar';
+    const exitToolLabel = labels?.close ?? 'Exit tool';
 
     const handleToggleMode = (mode: MeasurementDrawingMode) => {
       if (activeMode === mode) {
@@ -98,12 +124,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     activeMode === 'distance' &&
                       'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
                   )}
-                  aria-label="Measure distance"
+                  aria-label={distanceLabel}
                 >
                   <Ruler className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Measure path distance</TooltipContent>
+              <TooltipContent side="bottom">{distanceLabel}</TooltipContent>
             </Tooltip>
 
             {/* Area Measurement */}
@@ -117,12 +143,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     activeMode === 'area' &&
                       'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
                   )}
-                  aria-label="Measure area"
+                  aria-label={areaLabel}
                 >
                   <Maximize2 className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Measure polygon area</TooltipContent>
+              <TooltipContent side="bottom">{areaLabel}</TooltipContent>
             </Tooltip>
           </div>
 
@@ -146,12 +172,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     activeMode === 'point' &&
                       'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
                   )}
-                  aria-label="Draw marker"
+                  aria-label={pointLabel}
                 >
                   <MapPin className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Draw point marker</TooltipContent>
+              <TooltipContent side="bottom">{pointLabel}</TooltipContent>
             </Tooltip>
 
             {/* Line */}
@@ -165,12 +191,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     activeMode === 'line' &&
                       'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
                   )}
-                  aria-label="Draw line"
+                  aria-label={lineLabel}
                 >
                   <Spline className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Draw line / path</TooltipContent>
+              <TooltipContent side="bottom">{lineLabel}</TooltipContent>
             </Tooltip>
 
             {/* Polygon */}
@@ -184,12 +210,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     activeMode === 'polygon' &&
                       'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
                   )}
-                  aria-label="Draw polygon"
+                  aria-label={polygonLabel}
                 >
                   <Hexagon className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Draw polygon shape</TooltipContent>
+              <TooltipContent side="bottom">{polygonLabel}</TooltipContent>
             </Tooltip>
           </div>
 
@@ -214,7 +240,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                   </Badge>
                 ) : (
                   <span className="text-[11px] text-muted-foreground animate-pulse">
-                    Click map to start
+                    {clickToStartText}
                   </span>
                 )}
               </div>
@@ -231,12 +257,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                       type="button"
                       onClick={onFinish}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
-                      aria-label="Finish drawing"
+                      aria-label={finishDrawingLabel}
                     >
                       <Check className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Complete</TooltipContent>
+                  <TooltipContent side="bottom">{completeLabel}</TooltipContent>
                 </Tooltip>
               )}
 
@@ -247,12 +273,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                       type="button"
                       onClick={onClear}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:scale-95 transition-all"
-                      aria-label="Clear points"
+                      aria-label={clearLabel}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Clear points</TooltipContent>
+                  <TooltipContent side="bottom">{clearLabel}</TooltipContent>
                 </Tooltip>
               )}
 
@@ -262,12 +288,12 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     type="button"
                     onClick={() => onModeChange('none')}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
-                    aria-label="Exit tool"
+                    aria-label={exitToolLabel}
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Close toolbar</TooltipContent>
+                <TooltipContent side="bottom">{closeLabel}</TooltipContent>
               </Tooltip>
             </div>
           )}

@@ -18,6 +18,7 @@ import { Button, CollectionCard, CollectionDialog } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import type { PlaceModel } from '@modern-maps/types';
 import { useAuth } from '../../features/auth/useAuth';
+import { useTranslation } from '../../features/i18n';
 import { createClient } from '../../lib/supabase/client';
 import {
   getSavedPlaces,
@@ -47,6 +48,7 @@ function savedPlaceToPlaceModel(sp: SavedPlace): PlaceModel {
 }
 
 export function SavedPlacesView() {
+  const { t } = useTranslation();
   const { user, openAuthModal } = useAuth();
   const [supabase] = React.useState(() => createClient());
 
@@ -212,7 +214,7 @@ export function SavedPlacesView() {
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span className="text-[11px] font-medium text-foreground">
-              Synced with Supabase Cloud
+              {t('saved.synced')}
             </span>
           </div>
           <Button
@@ -221,7 +223,7 @@ export function SavedPlacesView() {
             onClick={syncWithSupabase}
             disabled={isSyncing}
             className="h-6 w-6 text-muted-foreground hover:text-foreground"
-            title="Sync with cloud"
+            title={t('saved.syncWithCloud')}
           >
             {isSyncing ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -235,7 +237,7 @@ export function SavedPlacesView() {
           <div className="flex items-center gap-2">
             <Cloud className="h-4 w-4 text-primary shrink-0" />
             <span className="text-[11px] text-muted-foreground">
-              Sign in to sync saved places across devices.
+              {t('saved.signInPrompt')}
             </span>
           </div>
           <Button
@@ -245,7 +247,7 @@ export function SavedPlacesView() {
             className="h-6 gap-1 px-2 text-[11px] font-medium"
           >
             <LogIn className="h-3 w-3" />
-            <span>Sign In</span>
+            <span>{t('nav.signIn')}</span>
           </Button>
         </div>
       )}
@@ -261,7 +263,7 @@ export function SavedPlacesView() {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Saved Places ({savedPlaces.length})
+          {t('saved.savedPlacesTab', { count: savedPlaces.length })}
         </button>
         <button
           type="button"
@@ -272,7 +274,7 @@ export function SavedPlacesView() {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Collections ({collections.length})
+          {t('saved.collectionsTab', { count: collections.length })}
         </button>
       </div>
 
@@ -328,8 +330,8 @@ export function SavedPlacesView() {
                       size="icon-sm"
                       className="h-6 w-6 text-primary hover:bg-primary/10"
                       onClick={(e) => handleDirections(e, place)}
-                      title="Directions"
-                      aria-label="Directions"
+                      title={t('place.directions')}
+                      aria-label={t('place.directions')}
                     >
                       <Navigation className="h-3 w-3" />
                     </Button>
@@ -338,8 +340,8 @@ export function SavedPlacesView() {
                       size="icon-sm"
                       className="h-6 w-6 text-muted-foreground hover:text-destructive"
                       onClick={(e) => handleRemove(e, place)}
-                      title="Remove from saved"
-                      aria-label="Remove from saved"
+                      title={t('saved.removeFromSaved')}
+                      aria-label={t('saved.removeFromSaved')}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -353,9 +355,9 @@ export function SavedPlacesView() {
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
               <Bookmark className="h-5 w-5" />
             </div>
-            <h4 className="font-semibold text-sm text-foreground">No saved places yet</h4>
+            <h4 className="font-semibold text-sm text-foreground">{t('saved.emptyTitle')}</h4>
             <p className="mt-1 text-xs text-muted-foreground max-w-[220px]">
-              Bookmark interesting landmarks, restaurants, and attractions to access them quickly here.
+              {t('saved.emptyDesc')}
             </p>
             <Button
               variant="outline"
@@ -363,7 +365,7 @@ export function SavedPlacesView() {
               className="mt-3 text-xs"
               onClick={() => setSidebarView('search')}
             >
-              Explore Places
+              {t('saved.explorePlaces')}
             </Button>
           </div>
         )
@@ -372,7 +374,7 @@ export function SavedPlacesView() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Custom Lists
+              {t('saved.customLists')}
             </span>
             <Button
               variant="outline"
@@ -381,7 +383,7 @@ export function SavedPlacesView() {
               className="h-7 gap-1 text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>New List</span>
+              <span>{t('saved.newList')}</span>
             </Button>
           </div>
 
@@ -407,6 +409,7 @@ export function SavedPlacesView() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onSave={handleCreateCollection}
+        title={t('saved.createCollection')}
       />
     </div>
   );

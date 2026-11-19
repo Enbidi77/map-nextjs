@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { Button, Badge } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
+import { useTranslation } from '../../features/i18n';
 
 export function PlaceDetailsView() {
+  const { t } = useTranslation();
   const selectedPlace = useMapStore((state) => state.selectedPlace);
   const setSelectedPlace = useMapStore((state) => state.setSelectedPlace);
   const setSidebarView = useMapStore((state) => state.setSidebarView);
@@ -32,14 +34,14 @@ export function PlaceDetailsView() {
   if (!selectedPlace) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-        <p className="text-sm">No place selected.</p>
+        <p className="text-sm">{t('place.noPlaceSelected')}</p>
         <Button
           variant="outline"
           size="sm"
           className="mt-3 text-xs"
           onClick={() => setSidebarView('search')}
         >
-          Return to Search
+          {t('place.returnToSearch')}
         </Button>
       </div>
     );
@@ -86,7 +88,7 @@ export function PlaceDetailsView() {
           className="gap-1.5 -ml-2 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Results</span>
+          <span>{t('place.backToResults')}</span>
         </Button>
 
         <Badge variant="outline" className="text-[10px] uppercase font-mono tracking-wider">
@@ -124,7 +126,7 @@ export function PlaceDetailsView() {
             </div>
           )}
           {typeof selectedPlace.reviewCount === 'number' && selectedPlace.reviewCount > 0 && (
-            <span>({selectedPlace.reviewCount.toLocaleString()} reviews)</span>
+            <span>{t('place.reviews', { count: selectedPlace.reviewCount.toLocaleString() })}</span>
           )}
           {typeof selectedPlace.priceLevel === 'number' && selectedPlace.priceLevel > 0 && (
             <>
@@ -144,7 +146,7 @@ export function PlaceDetailsView() {
                     : 'font-medium text-destructive'
                 }
               >
-                {selectedPlace.openingHours.openNow ? 'Open Now' : 'Closed'}
+                {selectedPlace.openingHours.openNow ? t('place.openNow') : t('place.closed')}
               </span>
             </>
           )}
@@ -160,7 +162,7 @@ export function PlaceDetailsView() {
           className="gap-1.5 text-xs font-semibold shadow-sm"
         >
           <Navigation className="h-3.5 w-3.5" />
-          <span>Directions</span>
+          <span>{t('place.directions')}</span>
         </Button>
 
         <Button
@@ -170,7 +172,7 @@ export function PlaceDetailsView() {
           className="gap-1.5 text-xs"
         >
           <Bookmark className={`h-3.5 w-3.5 ${isSaved ? 'fill-current text-primary' : ''}`} />
-          <span>{isSaved ? 'Saved' : 'Save'}</span>
+          <span>{isSaved ? t('place.saved') : t('place.save')}</span>
         </Button>
 
         <Button
@@ -178,10 +180,10 @@ export function PlaceDetailsView() {
           size="sm"
           onClick={handle3DView}
           className="gap-1.5 text-xs"
-          title="Tilt camera into 3D view"
+          title={t('place.tilt3D')}
         >
           <Box className="h-3.5 w-3.5 text-primary" />
-          <span>3D View</span>
+          <span>{t('place.view3D')}</span>
         </Button>
       </div>
 
@@ -218,12 +220,12 @@ export function PlaceDetailsView() {
             {copied ? (
               <>
                 <Check className="h-3 w-3 text-emerald-500" />
-                <span className="text-emerald-500">Copied</span>
+                <span className="text-emerald-500">{t('place.copied')}</span>
               </>
             ) : (
               <>
                 <Copy className="h-3 w-3" />
-                <span>Copy</span>
+                <span>{t('place.copyCoordinates')}</span>
               </>
             )}
           </button>

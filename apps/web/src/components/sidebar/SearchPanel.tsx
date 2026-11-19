@@ -4,16 +4,10 @@ import * as React from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { PlaceCard, Badge, Button } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
-
-const CATEGORIES: Array<{ id: string; label: string; icon: string }> = [
-  { id: 'all', label: 'All Places', icon: '📍' },
-  { id: 'attraction', label: 'Attractions', icon: '🏛️' },
-  { id: 'nature', label: 'Parks & Nature', icon: '🌲' },
-  { id: 'food_drink', label: 'Food & Dining', icon: '🍽️' },
-  { id: 'entertainment', label: 'Entertainment', icon: '🎭' },
-];
+import { useTranslation } from '../../features/i18n';
 
 export function SearchPanel() {
+  const { t } = useTranslation();
   const searchQuery = useMapStore((state) => state.searchQuery);
   const selectedCategory = useMapStore((state) => state.selectedCategory);
   const setSelectedCategory = useMapStore((state) => state.setSelectedCategory);
@@ -25,11 +19,19 @@ export function SearchPanel() {
   const liveSearchResults = useMapStore((state) => state.liveSearchResults);
   const isSearching = useMapStore((state) => state.isSearching);
 
+  const categories = [
+    { id: 'all', label: t('search.all'), icon: '📍' },
+    { id: 'attraction', label: t('search.attraction'), icon: '🏛️' },
+    { id: 'nature', label: t('search.nature'), icon: '🌲' },
+    { id: 'food_drink', label: t('search.foodDrink'), icon: '🍽️' },
+    { id: 'entertainment', label: t('search.entertainment'), icon: '🎭' },
+  ];
+
   return (
     <div className="flex flex-col gap-3 py-1 w-full min-w-0 max-w-full">
       {/* Category Pills Carousel */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive =
             (!selectedCategory && cat.id === 'all') || selectedCategory === cat.id;
           return (
@@ -59,14 +61,16 @@ export function SearchPanel() {
           {isSearching && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
           <span>
             {searchQuery
-              ? `Results for "${searchQuery}"`
+              ? t('search.resultsFor', { query: searchQuery })
               : selectedCategory
-              ? `${CATEGORIES.find((c) => c.id === selectedCategory)?.label}`
-              : 'Popular Highlights'}
+              ? categories.find((c) => c.id === selectedCategory)?.label
+              : t('search.popularHighlights')}
           </span>
         </span>
         <Badge variant="outline" className="text-[10px] font-mono">
-          {liveSearchResults.length} {liveSearchResults.length === 1 ? 'place' : 'places'}
+          {liveSearchResults.length === 1
+            ? t('search.placeCountSingle')
+            : t('search.placesCount', { count: liveSearchResults.length })}
         </Badge>
       </div>
 
@@ -103,9 +107,9 @@ export function SearchPanel() {
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Search className="h-5 w-5" />
           </div>
-          <h4 className="font-semibold text-sm text-foreground">No places found</h4>
+          <h4 className="font-semibold text-sm text-foreground">{t('search.noResults')}</h4>
           <p className="mt-1 text-xs text-muted-foreground max-w-[220px]">
-            Try adjusting your search terms or clearing your category filters.
+            {t('search.noResultsDesc')}
           </p>
           <Button
             variant="outline"
@@ -116,7 +120,7 @@ export function SearchPanel() {
               setSelectedCategory(null);
             }}
           >
-            Reset Filters
+            {t('common.cancel')}
           </Button>
         </div>
       )}

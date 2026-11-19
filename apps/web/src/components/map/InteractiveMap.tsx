@@ -5,6 +5,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import { MapContainer, type MapRenderer } from '@modern-maps/map-engine';
 import { MeasurementDrawingToolbar } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
+import { useTranslation } from '../../features/i18n';
 import { MapControlsOverlay } from './MapControlsOverlay';
 import type {
   GeoJSONFeatureCollection,
@@ -24,6 +25,7 @@ export function InteractiveMap({
   isLayerSelectorOpen,
   onToggleLayerSelector,
 }: InteractiveMapProps) {
+  const { t } = useTranslation();
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [mapInstance, setMapInstance] = React.useState<MapRenderer | null>(null);
 
@@ -406,6 +408,17 @@ export function InteractiveMap({
         pointsCount={toolPoints.length}
         position="top-center"
         className="top-4"
+        labels={{
+          distance: t('measure.distance'),
+          area: t('measure.area'),
+          point: t('measure.point'),
+          line: t('measure.line'),
+          polygon: t('measure.polygon'),
+          clickToStart: t('measure.clickToStart'),
+          complete: t('measure.complete'),
+          clear: t('measure.clear'),
+          close: t('measure.close'),
+        }}
       />
 
       {/* Floating Controls Overlay */}

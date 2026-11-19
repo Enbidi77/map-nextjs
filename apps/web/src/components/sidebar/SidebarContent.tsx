@@ -3,20 +3,22 @@
 import * as React from 'react';
 import { Search, Navigation, Bookmark } from 'lucide-react';
 import { useMapStore, type SidebarView } from '../../stores/useMapStore';
+import { useTranslation } from '../../features/i18n';
 import { SearchPanel } from './SearchPanel';
 import { PlaceDetailsView } from './PlaceDetailsView';
 import { DirectionsView } from './DirectionsView';
 import { SavedPlacesView } from './SavedPlacesView';
 
 export function SidebarContent() {
+  const { t } = useTranslation();
   const sidebarView = useMapStore((state) => state.sidebarView);
   const setSidebarView = useMapStore((state) => state.setSidebarView);
   const savedCount = useMapStore((state) => state.savedPlaces.length);
 
   const TABS: Array<{ id: SidebarView; label: string; icon: React.ReactNode; badge?: number }> = [
-    { id: 'search', label: 'Explore', icon: <Search className="h-3.5 w-3.5" /> },
-    { id: 'directions', label: 'Directions', icon: <Navigation className="h-3.5 w-3.5" /> },
-    { id: 'saved', label: 'Saved', icon: <Bookmark className="h-3.5 w-3.5" />, badge: savedCount },
+    { id: 'search', label: t('sidebar.explore'), icon: <Search className="h-3.5 w-3.5" /> },
+    { id: 'directions', label: t('sidebar.directions'), icon: <Navigation className="h-3.5 w-3.5" /> },
+    { id: 'saved', label: t('sidebar.saved'), icon: <Bookmark className="h-3.5 w-3.5" />, badge: savedCount },
   ];
 
   return (

@@ -13,6 +13,8 @@ export interface CoordinateBadgeProps extends React.HTMLAttributes<HTMLDivElemen
   showCopyButton?: boolean;
   showElevation?: boolean;
   elevation?: number;
+  copyTitle?: string;
+  copiedTitle?: string;
 }
 
 /**
@@ -51,6 +53,8 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
       showCopyButton = true,
       showElevation = false,
       elevation,
+      copyTitle = 'Copy coordinates',
+      copiedTitle = 'Coordinates copied',
       ...props
     },
     ref
@@ -93,8 +97,8 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
             type="button"
             onClick={copyCoords}
             className="flex h-5 w-5 items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Copy coordinates"
-            aria-label="Copy coordinates"
+            title={copied ? copiedTitle : copyTitle}
+            aria-label={copied ? copiedTitle : copyTitle}
           >
             {copied ? (
               <Check className="h-3 w-3 text-emerald-500" />
