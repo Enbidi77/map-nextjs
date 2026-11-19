@@ -14,7 +14,7 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [db.pooler]
 enabled = false
@@ -25,13 +25,11 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-port = 54323
 ip_version = "IPv4"
 
 [studio]
 enabled = true
 port = 54323
-api_role = "anon"
 
 [inbucket]
 enabled = true
@@ -77,7 +75,6 @@ enable_confirmations = false
 
 [edge_runtime]
 enabled = true
-port = 54327
 inspector_port = 8083
 
 [analytics]

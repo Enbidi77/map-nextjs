@@ -250,7 +250,7 @@ CREATE TRIGGER tr_map_layer_preferences_updated_at
 CREATE TABLE IF NOT EXISTS public.location_shares (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  share_token TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+  share_token TEXT NOT NULL UNIQUE DEFAULT encode(extensions.gen_random_bytes(16), 'hex'),
   current_location GEOGRAPHY(Point, 4326),
   heading DOUBLE PRECISION,
   speed DOUBLE PRECISION,

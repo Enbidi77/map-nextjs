@@ -37,6 +37,7 @@ venv/
 # Local Scratch & Temp
 prompt_spec.txt
 t1.py
+supabase/.temp/
 
 # OS Files
 .DS_Store

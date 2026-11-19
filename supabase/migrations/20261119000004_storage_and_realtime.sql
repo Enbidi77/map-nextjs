@@ -51,12 +51,10 @@ ON CONFLICT (id) DO UPDATE SET
 -- 2. Storage Object Security (RLS on storage.objects)
 -- ------------------------------------------------------------------------------
 
--- Enable RLS on storage.objects if table exists
+-- Configure policies on storage.objects (RLS is already pre-enabled by Supabase)
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
-    ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
     -- Drop existing modern-maps policies if re-running
     DROP POLICY IF EXISTS "Public read for place-photos and collection-covers" ON storage.objects;
     DROP POLICY IF EXISTS "Owner read for private buckets" ON storage.objects;
