@@ -29,7 +29,9 @@
       "@modern-maps/ui": ["./packages/ui/src/index.ts"],
       "@modern-maps/map-engine": ["./packages/map-engine/src/index.ts"],
       "@modern-maps/place-search": ["./packages/place-search/src/index.ts"],
-      "@modern-maps/routing": ["./packages/routing/src/index.ts"]
+      "@modern-maps/routing": ["./packages/routing/src/index.ts"],
+      "@modern-maps/supabase": ["./packages/supabase/src/index.ts"],
+      "@modern-maps/map-data": ["./packages/map-data/src/index.ts"]
     }
   }
 }

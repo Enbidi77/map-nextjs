@@ -8,12 +8,29 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Bookmark,
+  Users,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
-import { Button } from '@modern-maps/ui';
-import { SearchBar } from '@modern-maps/ui';
-import { ThemeToggle } from '@modern-maps/ui';
+import {
+  Button,
+  SearchBar,
+  ThemeToggle,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useResponsive } from '../../hooks/useMediaQuery';
+import { useAuth } from '../../features/auth/useAuth';
+import { usePresence } from '../../features/realtime/usePresence';
 
 export interface TopNavBarProps {
   onToggleLayerSelector?: () => void;
@@ -33,6 +50,9 @@ export function TopNavBar({
   const searchQuery = useMapStore((state) => state.searchQuery);
   const setSearchQuery = useMapStore((state) => state.setSearchQuery);
   const savedPlacesCount = useMapStore((state) => state.savedPlaces.length);
+
+  const { user, profile, openAuthModal, signOut } = useAuth();
+  const { peers, isConnected } = usePresence();
 
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -182,8 +202,119 @@ export function TopNavBar({
           </Button>
         )}
 
+        {/* Realtime Collaboration Indicator */}
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className="flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-xs select-none cursor-default transition-all hover:bg-muted/70"
+                aria-label={`Collaborative session: ${peers.length + 1} online`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    isConnected
+                      ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse'
+                      : 'bg-muted-foreground/40'
+                  }`}
+                />
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-mono text-[11px] font-semibold text-foreground">
+                  {peers.length + 1}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              <p className="font-semibold">
+                {isConnected ? 'Realtime Session Active' : 'Connecting to session...'}
+              </p>
+              <p className="text-[11px] opacity-80">
+                {peers.length === 0
+                  ? 'Only you are currently in this session.'
+                  : `${peers.length + 1} active collaborators online.`}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {/* Theme Switcher */}
         <ThemeToggle size="icon-sm" variant="dropdown" />
+
+        {/* Supabase Auth State / User Profile Avatar Dropdown */}
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="relative h-8 w-8 rounded-full border border-border/80 p-0 hover:ring-2 hover:ring-primary/20 overflow-hidden"
+                aria-label="User account menu"
+              >
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name || 'User avatar'}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs font-bold text-primary uppercase">
+                    {(profile?.full_name || user.email || 'U')[0]}
+                  </div>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 p-1">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-xs font-semibold leading-none text-foreground truncate">
+                    {profile?.full_name || 'Signed In'}
+                  </p>
+                  <p className="text-[11px] leading-none text-muted-foreground truncate font-mono">
+                    {user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 text-xs"
+                onClick={() => {
+                  setSidebarView('saved');
+                  setSidebarOpen(true);
+                }}
+              >
+                <Bookmark className="h-3.5 w-3.5 text-amber-500" />
+                <span>My Saved Places</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 text-xs"
+                onClick={() => {
+                  setSidebarView('search');
+                  setSidebarOpen(true);
+                }}
+              >
+                <Compass className="h-3.5 w-3.5 text-primary" />
+                <span>Explore Map</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer gap-2 text-xs text-destructive focus:text-destructive"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => openAuthModal('signin')}
+            className="h-8 gap-1.5 px-3 text-xs font-medium shadow-sm"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sign In</span>
+          </Button>
+        )}
       </div>
     </header>
   );

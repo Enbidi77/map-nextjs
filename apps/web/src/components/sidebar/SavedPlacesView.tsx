@@ -1,12 +1,55 @@
 'use client';
 
 import * as React from 'react';
-import { Bookmark, MapPin, Trash2, Navigation, Star, Plus } from 'lucide-react';
+import {
+  Bookmark,
+  MapPin,
+  Trash2,
+  Navigation,
+  Star,
+  Plus,
+  Cloud,
+  CheckCircle2,
+  RefreshCw,
+  LogIn,
+  Loader2,
+} from 'lucide-react';
 import { Button, CollectionCard, CollectionDialog } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import type { PlaceModel } from '@modern-maps/types';
+import { useAuth } from '../../features/auth/useAuth';
+import { createClient } from '../../lib/supabase/client';
+import {
+  getSavedPlaces,
+  deleteSavedPlace,
+  getCollections,
+  createCollection as createCollectionSupabase,
+  deleteCollection as deleteCollectionSupabase,
+  type SavedPlace,
+} from '@modern-maps/supabase';
+
+function savedPlaceToPlaceModel(sp: SavedPlace): PlaceModel {
+  const metadata = (sp.metadata as Record<string, unknown>) || {};
+  return {
+    id: sp.id,
+    name: sp.name,
+    address: sp.formattedAddress || sp.name,
+    category: (sp.category as any) || 'landmark',
+    coordinates: [sp.longitude, sp.latitude],
+    rating: sp.rating ?? undefined,
+    description: sp.notes || undefined,
+    photos: Array.isArray(metadata.photos) ? (metadata.photos as string[]) : [],
+    reviewCount: typeof metadata.reviewCount === 'number' ? metadata.reviewCount : undefined,
+    metadata,
+    createdAt: sp.createdAt,
+    updatedAt: sp.updatedAt,
+  };
+}
 
 export function SavedPlacesView() {
+  const { user, openAuthModal } = useAuth();
+  const [supabase] = React.useState(() => createClient());
+
   const savedPlaces = useMapStore((state) => state.savedPlaces);
   const toggleSavePlace = useMapStore((state) => state.toggleSavePlace);
   const setSelectedPlace = useMapStore((state) => state.setSelectedPlace);
@@ -19,6 +62,49 @@ export function SavedPlacesView() {
 
   const [activeTab, setActiveTab] = React.useState<'places' | 'collections'>('places');
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const syncWithSupabase = React.useCallback(async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      // 1. Fetch saved places from Supabase
+      const dbPlaces = await getSavedPlaces(supabase, { userId: user.id });
+      if (dbPlaces.length > 0) {
+        useMapStore.setState({
+          savedPlaces: dbPlaces.map(savedPlaceToPlaceModel),
+        });
+      }
+
+      // 2. Fetch collections from Supabase
+      const dbCollections = await getCollections(supabase, { userId: user.id });
+      if (dbCollections.length > 0) {
+        useMapStore.setState({
+          collections: dbCollections.map((col) => ({
+            id: col.id,
+            name: col.name,
+            description: col.description || undefined,
+            color: col.color || '#3b82f6',
+            icon: col.icon || 'bookmark',
+            placesCount: col.itemCount || 0,
+            isPublic: col.isPublic,
+            createdAt: col.createdAt,
+            updatedAt: col.updatedAt,
+          })),
+        });
+      }
+    } catch (err: unknown) {
+      console.warn('Could not sync with Supabase (running in offline/mock mode):', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [supabase, user]);
+
+  React.useEffect(() => {
+    if (user) {
+      syncWithSupabase();
+    }
+  }, [user, syncWithSupabase]);
 
   const handleSelectPlace = (place: PlaceModel) => {
     setSelectedPlace(place);
@@ -34,13 +120,100 @@ export function SavedPlacesView() {
     setSidebarView('directions');
   };
 
-  const handleRemove = (e: React.MouseEvent, place: PlaceModel) => {
+  const handleRemove = async (e: React.MouseEvent, place: PlaceModel) => {
     e.stopPropagation();
     toggleSavePlace(place);
+
+    if (user) {
+      try {
+        await deleteSavedPlace(supabase, place.id);
+      } catch (err) {
+        console.warn('Failed to delete saved place from Supabase:', err);
+      }
+    }
+  };
+
+  const handleCreateCollection = async (data: {
+    name: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+  }) => {
+    createCollection(data);
+
+    if (user) {
+      try {
+        await createCollectionSupabase(supabase, {
+          userId: user.id,
+          name: data.name,
+          description: data.description,
+          color: data.color,
+          icon: data.icon,
+        });
+      } catch (err) {
+        console.warn('Failed to save collection to Supabase:', err);
+      }
+    }
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    deleteCollection(id);
+
+    if (user) {
+      try {
+        await deleteCollectionSupabase(supabase, id);
+      } catch (err) {
+        console.warn('Failed to delete collection from Supabase:', err);
+      }
+    }
   };
 
   return (
     <div className="flex flex-col gap-3 py-1">
+      {/* Cloud Sync Status / Sign In Banner */}
+      {user ? (
+        <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span className="text-[11px] font-medium text-foreground">
+              Synced with Supabase Cloud
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={syncWithSupabase}
+            disabled={isSyncing}
+            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+            title="Sync with cloud"
+          >
+            {isSyncing ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-2.5 text-xs">
+          <div className="flex items-center gap-2">
+            <Cloud className="h-4 w-4 text-primary shrink-0" />
+            <span className="text-[11px] text-muted-foreground">
+              Sign in to sync saved places across devices.
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => openAuthModal('signin')}
+            className="h-6 gap-1 px-2 text-[11px] font-medium"
+          >
+            <LogIn className="h-3 w-3" />
+            <span>Sign In</span>
+          </Button>
+        </div>
+      )}
+
       {/* Sub-tabs: Saved Pins vs Collections */}
       <div className="flex rounded-lg border border-border/50 bg-muted/40 p-1">
         <button
@@ -186,7 +359,7 @@ export function SavedPlacesView() {
                 color={col.color}
                 icon={col.icon}
                 placesCount={col.placesCount}
-                onDelete={(id) => deleteCollection(id)}
+                onDelete={(id) => handleDeleteCollection(id)}
               />
             ))}
           </div>
@@ -197,7 +370,7 @@ export function SavedPlacesView() {
       <CollectionDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSave={(data) => createCollection(data)}
+        onSave={handleCreateCollection}
       />
     </div>
   );

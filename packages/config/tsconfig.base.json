@@ -18,6 +18,14 @@
     "declarationMap": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@modern-maps/types": ["../types/src/index.ts"],
+      "@modern-maps/geospatial": ["../geospatial/src/index.ts"],
+      "@modern-maps/validation": ["../validation/src/index.ts"],
+      "@modern-maps/supabase": ["../supabase/src/index.ts"],
+      "@modern-maps/map-data": ["../map-data/src/index.ts"]
+    }
   }
 }

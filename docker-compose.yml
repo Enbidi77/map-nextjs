@@ -1,6 +1,11 @@
 version: '3.8'
 
 services:
+  # ----------------------------------------------------------------------------
+  # PostGIS 16 Spatial Database
+  # Compatible with standalone development or direct SQL inspection
+  # (For full Supabase local stack, see `supabase start` in README.md)
+  # ----------------------------------------------------------------------------
   postgres:
     image: postgis/postgis:16-3.4
     container_name: modern-maps-postgis
@@ -13,12 +18,16 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgis_data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-modern_maps}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  # ----------------------------------------------------------------------------
+  # Redis Cache & Ephemeral Realtime PubSub
+  # ----------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: modern-maps-redis
