@@ -33,6 +33,7 @@ export function MobileBottomSheet() {
       {/* Drag & Header Bar */}
       <button
         type="button"
+        suppressHydrationWarning
         onClick={() => setExpanded(!expanded)}
         className="flex h-7 w-full items-center justify-center cursor-pointer select-none"
         aria-label={expanded ? 'Minimize panel' : 'Expand panel'}

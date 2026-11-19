@@ -209,6 +209,27 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   toggleSavePlace: (place) =>
     set((state) => {
       const exists = state.savedPlaces.some((p) => p.id === place.id);
+      if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+        if (!exists) {
+          fetch('/api/saved-places', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: place.id,
+              name: place.name,
+              formattedAddress: place.address,
+              category: place.category,
+              latitude: place.coordinates[1],
+              longitude: place.coordinates[0],
+              notes: place.description,
+            }),
+          }).catch((err) => console.warn('Could not persist saved place to Supabase:', err));
+        } else {
+          fetch(`/api/saved-places?id=${encodeURIComponent(place.id)}`, {
+            method: 'DELETE',
+          }).catch((err) => console.warn('Could not delete saved place from Supabase:', err));
+        }
+      }
       return {
         savedPlaces: exists
           ? state.savedPlaces.filter((p) => p.id !== place.id)
@@ -460,32 +481,60 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
             const [, lat1] = origin;
             const [, lat2] = destination;
 
+            const routeDistance =
+              typeof primary.distanceMeters === 'number' && !isNaN(primary.distanceMeters)
+                ? primary.distanceMeters
+                : typeof primary.distance === 'number' && !isNaN(primary.distance)
+                ? primary.distance
+                : 0;
+
+            const routeDuration =
+              typeof primary.durationSeconds === 'number' && !isNaN(primary.durationSeconds)
+                ? primary.durationSeconds
+                : typeof primary.duration === 'number' && !isNaN(primary.duration)
+                ? primary.duration
+                : 0;
+
             const steps: DirectionStep[] = (primary.legs?.[0]?.steps || []).map((s: any) => ({
               instruction: s.maneuver?.instruction || s.name || 'Proceed',
-              distanceMeters: Math.round(s.distance || 0),
-              durationSeconds: Math.round(s.duration || 0),
+              distanceMeters: Math.round(s.distanceMeters ?? s.distance ?? 0),
+              durationSeconds: Math.round(s.durationSeconds ?? s.duration ?? 0),
               type: s.maneuver?.type,
               modifier: s.maneuver?.modifier,
               streetName: s.name,
             }));
 
+            const km = Math.max(0.1, routeDistance / 1000);
+            const computedZoom = Math.min(14, Math.max(2, 14 - Math.log2(km)));
+
             set((state) => ({
               directions: {
                 ...state.directions,
-                distanceMeters: Math.round(primary.distance),
-                durationSeconds: Math.round(primary.duration),
+                distanceMeters: Math.round(routeDistance),
+                durationSeconds: Math.round(routeDuration),
                 routeGeometry: primary.geometry?.coordinates || [origin, destination],
-                steps: steps.length > 0 ? steps : [
-                  { instruction: 'Head toward destination', distanceMeters: Math.round(primary.distance * 0.5), durationSeconds: Math.round(primary.duration * 0.5) },
-                  { instruction: 'Arrive at destination', distanceMeters: Math.round(primary.distance * 0.5), durationSeconds: Math.round(primary.duration * 0.5) },
-                ],
+                steps:
+                  steps.length > 0
+                    ? steps
+                    : [
+                        {
+                          instruction: 'Head toward destination',
+                          distanceMeters: Math.round(routeDistance * 0.5),
+                          durationSeconds: Math.round(routeDuration * 0.5),
+                        },
+                        {
+                          instruction: 'Arrive at destination',
+                          distanceMeters: Math.round(routeDistance * 0.5),
+                          durationSeconds: Math.round(routeDuration * 0.5),
+                        },
+                      ],
                 isActive: true,
                 isLoading: false,
               },
               camera: {
                 ...state.camera,
                 center: [(lng1 + lng2) / 2, (lat1 + lat2) / 2],
-                zoom: Math.max(11, 14 - Math.log2(Math.max(1, primary.distance / 1000))),
+                zoom: computedZoom,
               },
             }));
             return;

@@ -186,12 +186,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signInWithOAuth = React.useCallback(
-    async (provider: 'github' | 'google') => {
+    async (provider: 'github' | 'google', nextPath?: string) => {
       try {
-        const redirectTo =
-          typeof window !== 'undefined'
-            ? `${window.location.origin}/auth/callback`
-            : undefined;
+        const origin =
+          typeof window !== 'undefined' ? window.location.origin : '';
+        const callbackUrl = origin ? new URL('/auth/callback', origin) : null;
+        if (callbackUrl && nextPath) {
+          callbackUrl.searchParams.set('next', nextPath);
+        }
+
+        const redirectTo = callbackUrl ? callbackUrl.toString() : undefined;
 
         const { error } = await supabase.auth.signInWithOAuth({
           provider,

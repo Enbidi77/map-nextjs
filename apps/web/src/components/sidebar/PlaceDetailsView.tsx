@@ -73,7 +73,7 @@ export function PlaceDetailsView() {
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-4">
+    <div className="flex flex-col gap-4 pb-4 w-full min-w-0 max-w-full">
       {/* Back button header */}
       <div className="flex items-center justify-between">
         <Button
@@ -117,16 +117,16 @@ export function PlaceDetailsView() {
 
         {/* Ratings & Price */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {selectedPlace.rating && (
+          {typeof selectedPlace.rating === 'number' && !isNaN(selectedPlace.rating) && (
             <div className="flex items-center gap-1 font-semibold text-amber-500">
               <Star className="h-3.5 w-3.5 fill-current" />
               <span>{selectedPlace.rating.toFixed(1)}</span>
             </div>
           )}
-          {selectedPlace.reviewCount && (
+          {typeof selectedPlace.reviewCount === 'number' && selectedPlace.reviewCount > 0 && (
             <span>({selectedPlace.reviewCount.toLocaleString()} reviews)</span>
           )}
-          {selectedPlace.priceLevel && (
+          {typeof selectedPlace.priceLevel === 'number' && selectedPlace.priceLevel > 0 && (
             <>
               <span>•</span>
               <span className="font-semibold text-foreground">

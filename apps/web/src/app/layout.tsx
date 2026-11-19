@@ -47,7 +47,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="h-screen w-screen overflow-hidden font-sans antialiased">
+      <body
+        className="h-screen w-screen overflow-hidden font-sans antialiased"
+        suppressHydrationWarning
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

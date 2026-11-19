@@ -20,9 +20,9 @@ export function SidebarContent() {
   ];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 w-full min-w-0 max-w-full">
       {/* Top Tab Switcher */}
-      <div className="flex rounded-lg border border-border/60 bg-muted/40 p-1">
+      <div className="flex rounded-lg border border-border/60 bg-muted/40 p-1 w-full min-w-0">
         {TABS.map((tab) => {
           const isActive =
             sidebarView === tab.id || (tab.id === 'search' && sidebarView === 'place');
@@ -30,17 +30,18 @@ export function SidebarContent() {
             <button
               key={tab.id}
               type="button"
+              suppressHydrationWarning
               onClick={() => setSidebarView(tab.id)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-all ${
+              className={`flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-1.5 rounded-md py-1.5 px-1 text-xs font-medium transition-all ${
                 isActive
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab.icon}
-              <span>{tab.label}</span>
+              <span className="shrink-0">{tab.icon}</span>
+              <span className="truncate">{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary/20 px-1 font-mono text-[9px] font-bold text-primary">
+                <span className="flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-primary/20 px-1 font-mono text-[9px] font-bold text-primary">
                   {tab.badge}
                 </span>
               )}

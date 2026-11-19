@@ -23,7 +23,7 @@ export interface AuthContextValue {
   setAuthModalMode: (mode: AuthModalMode) => void;
   signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
-  signInWithOAuth: (provider: 'github' | 'google') => Promise<{ error: Error | null }>;
+  signInWithOAuth: (provider: 'github' | 'google', nextPath?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }

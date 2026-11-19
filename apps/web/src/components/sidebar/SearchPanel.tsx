@@ -26,7 +26,7 @@ export function SearchPanel() {
   const isSearching = useMapStore((state) => state.isSearching);
 
   return (
-    <div className="flex flex-col gap-3 py-1">
+    <div className="flex flex-col gap-3 py-1 w-full min-w-0 max-w-full">
       {/* Category Pills Carousel */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
         {CATEGORIES.map((cat) => {
@@ -36,6 +36,7 @@ export function SearchPanel() {
             <button
               key={cat.id}
               type="button"
+              suppressHydrationWarning
               onClick={() =>
                 setSelectedCategory(cat.id === 'all' ? null : cat.id)
               }

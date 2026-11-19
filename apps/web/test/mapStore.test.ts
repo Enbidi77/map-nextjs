@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useMapStore } from '../src/stores/useMapStore';
 import { MOCK_PLACES } from '../src/data/mockPlaces';
 
@@ -102,6 +102,68 @@ describe('useMapStore', () => {
 
     clearDirections();
     expect(useMapStore.getState().directions.isActive).toBe(false);
+  });
+
+  it('handles API route format with distanceMeters/durationSeconds without producing NaN', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        routes: [
+          {
+            distanceMeters: 4500000,
+            durationSeconds: 180000,
+            geometry: {
+              coordinates: [
+                [105.8, 21.0],
+                [116.4, 39.9],
+              ],
+            },
+            legs: [
+              {
+                steps: [
+                  {
+                    name: 'AH1',
+                    distanceMeters: 2000000,
+                    durationSeconds: 80000,
+                    maneuver: { instruction: 'Continue on AH1' },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    } as any);
+
+    const originalLocation = (globalThis as any).window?.location;
+    if (!(globalThis as any).window) (globalThis as any).window = {};
+    (globalThis as any).window.location = { origin: 'http://localhost:3000' };
+
+    const { setOrigin, setDestination, calculateRoute } = useMapStore.getState();
+    setOrigin([105.8, 21.0], 'Viet');
+    setDestination([116.4, 39.9], 'China');
+
+    const originalNodeEnv = process.env.NODE_ENV;
+    (process.env as any).NODE_ENV = 'development';
+
+    try {
+      await calculateRoute();
+      const { directions } = useMapStore.getState();
+      expect(directions.isActive).toBe(true);
+      expect(directions.distanceMeters).toBe(4500000);
+      expect(directions.durationSeconds).toBe(180000);
+      expect(Number.isNaN(directions.distanceMeters)).toBe(false);
+      expect(Number.isNaN(directions.durationSeconds)).toBe(false);
+      expect(directions.steps[0]!.distanceMeters).toBe(2000000);
+      expect(directions.steps[0]!.durationSeconds).toBe(80000);
+    } finally {
+      (process.env as any).NODE_ENV = originalNodeEnv;
+      globalThis.fetch = originalFetch;
+      if (originalLocation) {
+        (globalThis as any).window.location = originalLocation;
+      }
+    }
   });
 
   it('manages measurement and drawing tools', () => {

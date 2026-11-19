@@ -115,7 +115,7 @@ export const ManeuverInstructionCard = React.forwardRef<
         <div
           ref={ref}
           className={cn(
-            'flex items-center gap-3 rounded-lg border p-2.5 transition-all text-xs',
+            'flex items-center gap-2 rounded-lg border p-2 transition-all text-xs w-full min-w-0',
             isCurrent
               ? 'border-primary/50 bg-primary/10 shadow-sm'
               : 'border-border/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground',
@@ -123,16 +123,19 @@ export const ManeuverInstructionCard = React.forwardRef<
           )}
           {...props}
         >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted/60">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted/60">
             {getManeuverIcon(type, modifier)}
           </div>
-          <div className="flex-1 truncate">
-            <span className={cn('font-medium', isCurrent && 'text-foreground font-semibold')}>
+          <div className="flex-1 min-w-0">
+            <span
+              className={cn('block truncate font-medium', isCurrent && 'text-foreground font-semibold')}
+              title={instruction}
+            >
               {instruction}
             </span>
           </div>
           {formattedDistance && (
-            <span className="font-mono text-[11px] font-medium text-muted-foreground shrink-0">
+            <span className="font-mono text-[10px] font-medium text-muted-foreground shrink-0 pl-1">
               {formattedDistance}
             </span>
           )}

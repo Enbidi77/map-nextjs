@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 
     const db = getDatabase();
     const newPlace = await db.createSavedPlace({
+      id: body.id,
       userId,
       name,
       formattedAddress,

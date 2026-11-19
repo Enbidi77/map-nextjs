@@ -65,46 +65,82 @@ export function SavedPlacesView() {
   const [isSyncing, setIsSyncing] = React.useState(false);
 
   const syncWithSupabase = React.useCallback(async () => {
-    if (!user) return;
     setIsSyncing(true);
     try {
-      // 1. Fetch saved places from Supabase
-      const dbPlaces = await getSavedPlaces(supabase, { userId: user.id });
-      if (dbPlaces.length > 0) {
-        useMapStore.setState({
-          savedPlaces: dbPlaces.map(savedPlaceToPlaceModel),
-        });
-      }
+      if (user) {
+        // 1. Fetch saved places from Supabase for current user
+        const dbPlaces = await getSavedPlaces(supabase, { userId: user.id });
+        if (dbPlaces.length > 0) {
+          useMapStore.setState({
+            savedPlaces: dbPlaces.map(savedPlaceToPlaceModel),
+          });
+        }
 
-      // 2. Fetch collections from Supabase
-      const dbCollections = await getCollections(supabase, { userId: user.id });
-      if (dbCollections.length > 0) {
-        useMapStore.setState({
-          collections: dbCollections.map((col) => ({
-            id: col.id,
-            name: col.name,
-            description: col.description || undefined,
-            color: col.color || '#3b82f6',
-            icon: col.icon || 'bookmark',
-            placesCount: col.itemCount || 0,
-            isPublic: col.isPublic,
-            createdAt: col.createdAt,
-            updatedAt: col.updatedAt,
-          })),
-        });
+        // 2. Fetch collections from Supabase for current user
+        const dbCollections = await getCollections(supabase, { userId: user.id });
+        if (dbCollections.length > 0) {
+          useMapStore.setState({
+            collections: dbCollections.map((col) => ({
+              id: col.id,
+              name: col.name,
+              description: col.description || undefined,
+              color: col.color || '#3b82f6',
+              icon: col.icon || 'bookmark',
+              placesCount: col.itemCount || 0,
+              isPublic: col.isPublic,
+              createdAt: col.createdAt,
+              updatedAt: col.updatedAt,
+            })),
+          });
+        }
+      } else {
+        // Unauthenticated mode: fetch public & seeded places from Supabase Postgres via API
+        const [placesRes, colsRes] = await Promise.allSettled([
+          fetch('/api/saved-places').then((r) => r.json()),
+          fetch('/api/collections').then((r) => r.json()),
+        ]);
+
+        if (placesRes.status === 'fulfilled' && placesRes.value?.places?.length > 0) {
+          useMapStore.setState({
+            savedPlaces: placesRes.value.places.map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              address: p.formattedAddress || p.name,
+              category: (p.category as any) || 'landmark',
+              coordinates: [Number(p.longitude), Number(p.latitude)],
+              description: p.notes || undefined,
+              createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
+              updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : new Date().toISOString(),
+            })),
+          });
+        }
+
+        if (colsRes.status === 'fulfilled' && colsRes.value?.collections?.length > 0) {
+          useMapStore.setState({
+            collections: colsRes.value.collections.map((col: any) => ({
+              id: col.id,
+              name: col.name,
+              description: col.description || undefined,
+              color: col.color || '#3b82f6',
+              icon: col.icon || 'bookmark',
+              placesCount: col.itemCount || 0,
+              isPublic: col.isPublic,
+              createdAt: col.createdAt ? new Date(col.createdAt).toISOString() : new Date().toISOString(),
+              updatedAt: col.updatedAt ? new Date(col.updatedAt).toISOString() : new Date().toISOString(),
+            })),
+          });
+        }
       }
     } catch (err: unknown) {
-      console.warn('Could not sync with Supabase (running in offline/mock mode):', err);
+      console.warn('Could not sync with Supabase:', err);
     } finally {
       setIsSyncing(false);
     }
   }, [supabase, user]);
 
   React.useEffect(() => {
-    if (user) {
-      syncWithSupabase();
-    }
-  }, [user, syncWithSupabase]);
+    syncWithSupabase();
+  }, [syncWithSupabase]);
 
   const handleSelectPlace = (place: PlaceModel) => {
     setSelectedPlace(place);
@@ -169,7 +205,7 @@ export function SavedPlacesView() {
   };
 
   return (
-    <div className="flex flex-col gap-3 py-1">
+    <div className="flex flex-col gap-3 py-1 w-full min-w-0 max-w-full">
       {/* Cloud Sync Status / Sign In Banner */}
       {user ? (
         <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs">

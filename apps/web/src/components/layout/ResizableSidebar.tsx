@@ -62,21 +62,18 @@ export function ResizableSidebar() {
           visibility: sidebarOpen ? 'visible' : 'hidden',
         }}
       >
-        {/* Inner container with fixed width to prevent squishing during CSS transitions */}
-        <div
-          className="flex h-full flex-col overflow-hidden"
-          style={{ width: `${sidebarWidth}px` }}
-        >
+        {/* Inner container matching sidebar width */}
+        <div className="flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden">
           {/* Header Bar */}
-          <div className="flex h-12 items-center justify-between border-b border-border/60 px-4">
-            <span className="font-semibold text-xs tracking-wider uppercase text-muted-foreground">
+          <div className="flex h-12 items-center justify-between border-b border-border/60 px-3 sm:px-4">
+            <span className="font-semibold text-xs tracking-wider uppercase text-muted-foreground truncate mr-2">
               Map Explorer
             </span>
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={toggleSidebar}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground shrink-0"
               aria-label="Collapse sidebar"
             >
               <PanelLeftClose className="h-4 w-4" />
@@ -84,7 +81,7 @@ export function ResizableSidebar() {
           </div>
 
           {/* Scrollable Content Body */}
-          <ScrollArea className="flex-1 px-4 py-3">
+          <ScrollArea className="flex-1 px-3 sm:px-4 py-3">
             <SidebarContent />
           </ScrollArea>
         </div>

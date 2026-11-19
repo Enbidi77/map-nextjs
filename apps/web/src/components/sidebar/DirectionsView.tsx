@@ -222,11 +222,11 @@ export function DirectionsView() {
     (directions.destination || destInput.trim().length > 0);
 
   return (
-    <div className="flex flex-col gap-4 py-1">
+    <div className="flex flex-col gap-4 py-1 w-full min-w-0 max-w-full">
       {/* Route Inputs Card */}
-      <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 text-card-foreground shadow-sm">
+      <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 text-card-foreground shadow-sm w-full min-w-0">
         {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-4 gap-1 border-b border-border/50 pb-2.5">
+        <div className="grid grid-cols-4 gap-1 border-b border-border/50 pb-2.5 w-full min-w-0">
           {MODES.map((item) => (
             <button
               key={item.mode}
@@ -250,14 +250,14 @@ export function DirectionsView() {
         </div>
 
         {/* Origin & Destination Inputs with Swap Button */}
-        <div className="relative flex flex-col gap-2.5 pt-1">
+        <div className="relative flex flex-col gap-2.5 pt-1 w-full min-w-0">
           {/* Origin Input with Autocomplete */}
           <div className="relative">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <div className="h-2 w-2 rounded-full bg-emerald-500" />
               </div>
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Input
                   value={originInput}
                   onFocus={() => setActiveInput('origin')}
@@ -278,8 +278,8 @@ export function DirectionsView() {
                       setActiveInput(null);
                     }
                   }}
-                  placeholder="Choose starting point (e.g. Viet Nam)..."
-                  className="h-8 pr-7 text-xs font-medium"
+                  placeholder="Starting point..."
+                  className="h-8 pr-7 text-xs font-medium w-full min-w-0"
                 />
                 {isSearchingOrigin && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -313,11 +313,11 @@ export function DirectionsView() {
 
           {/* Destination Input with Autocomplete */}
           <div className="relative">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                 <MapPin className="h-3.5 w-3.5" />
               </div>
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Input
                   value={destInput}
                   onFocus={() => setActiveInput('dest')}
@@ -338,8 +338,8 @@ export function DirectionsView() {
                       setActiveInput(null);
                     }
                   }}
-                  placeholder="Choose destination (e.g. China)..."
-                  className="h-8 pr-7 text-xs font-medium"
+                  placeholder="Destination..."
+                  className="h-8 pr-7 text-xs font-medium w-full min-w-0"
                 />
                 {isSearchingDest && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -435,20 +435,20 @@ export function DirectionsView() {
         )}
 
         {/* Calculate / Action Buttons */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+        <div className="flex items-center gap-2 pt-2 border-t border-border/50 w-full min-w-0">
           <Button
             variant="default"
             size="sm"
             onClick={handleGetDirections}
             disabled={!canCalculate || directions.isLoading}
-            className="flex-1 gap-1.5 text-xs font-semibold"
+            className="flex-1 min-w-0 gap-1.5 text-xs font-semibold px-2.5 truncate"
           >
             {directions.isLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
             ) : (
-              <Navigation className="h-3.5 w-3.5" />
+              <Navigation className="h-3.5 w-3.5 shrink-0" />
             )}
-            <span>{directions.isLoading ? 'Calculating...' : 'Get Directions'}</span>
+            <span className="truncate">{directions.isLoading ? 'Calculating...' : 'Get Directions'}</span>
           </Button>
 
           {directions.isActive && (
@@ -456,7 +456,7 @@ export function DirectionsView() {
               variant="outline"
               size="sm"
               onClick={clearDirections}
-              className="gap-1 text-xs text-muted-foreground hover:text-destructive"
+              className="shrink-0 gap-1 text-xs text-muted-foreground hover:text-destructive px-2.5"
               aria-label="Clear route"
             >
               <X className="h-3.5 w-3.5" />
@@ -467,31 +467,44 @@ export function DirectionsView() {
       </div>
 
       {/* Calculated Route Details */}
-      {directions.isActive && directions.distanceMeters && directions.durationSeconds && (
-        <div className="flex flex-col gap-3">
+      {Boolean(
+        directions.isActive &&
+          typeof directions.distanceMeters === 'number' &&
+          !isNaN(directions.distanceMeters) &&
+          typeof directions.durationSeconds === 'number' &&
+          !isNaN(directions.durationSeconds)
+      ) && (
+        <div className="flex flex-col gap-3 w-full min-w-0">
           {/* Summary Card */}
-          <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 p-3.5">
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-primary">
-                {Math.round(directions.durationSeconds / 60)} min
+          <div className="flex items-center justify-between gap-2.5 rounded-xl border border-primary/30 bg-primary/5 p-3 sm:p-3.5 w-full min-w-0">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-lg sm:text-xl font-bold text-primary truncate">
+                {Math.floor((directions.durationSeconds ?? 0) / 3600) > 0
+                  ? `${Math.floor((directions.durationSeconds ?? 0) / 3600)} hr ${Math.round(
+                      ((directions.durationSeconds ?? 0) % 3600) / 60
+                    )} min`
+                  : `${Math.max(1, Math.round((directions.durationSeconds ?? 0) / 60))} min`}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {(directions.distanceMeters / 1000).toFixed(1)} km ({((directions.distanceMeters / 1000) * 0.621371).toFixed(1)} mi) via fastest route
+              <span
+                className="text-xs text-muted-foreground truncate"
+                title={`${(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km via fastest route`}
+              >
+                {(((directions.distanceMeters ?? 0) / 1000)).toFixed(1)} km ({(((directions.distanceMeters ?? 0) / 1000) * 0.621371).toFixed(1)} mi) via fastest route
               </span>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
               {MODES.find((m) => m.mode === directions.mode)?.icon}
             </div>
           </div>
 
           {/* Turn by turn steps with ManeuverInstructionCard */}
-          <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 shadow-sm">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground pb-1 border-b border-border/50">
-              <Milestone className="h-4 w-4 text-primary" />
-              <span>Turn-by-turn guidance</span>
+          <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card p-3 shadow-sm w-full min-w-0">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground pb-1 border-b border-border/50 w-full min-w-0">
+              <Milestone className="h-4 w-4 text-primary shrink-0" />
+              <span className="truncate">Turn-by-turn guidance</span>
             </div>
 
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-col gap-2 pt-1 w-full min-w-0">
               {directions.steps.map((step, idx) => (
                 <ManeuverInstructionCard
                   key={idx}
