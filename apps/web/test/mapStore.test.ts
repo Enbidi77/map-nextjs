@@ -178,9 +178,52 @@ describe('useMapStore', () => {
     addToolPoint([-122.4094, 37.7849]);
     expect(useMapStore.getState().toolPoints.length).toBe(2);
     expect(useMapStore.getState().measurementValue).toBeTruthy();
+    expect(useMapStore.getState().measurementValue).toMatch(/km|m/);
 
     clearToolPoints();
     expect(useMapStore.getState().toolPoints.length).toBe(0);
+    expect(useMapStore.getState().measurementValue).toBeNull();
+  });
+
+  it('calculates geodesic area with appropriate units (m², ha, km²) for area and polygon modes', () => {
+    const { setActiveToolMode, addToolPoint, clearToolPoints } = useMapStore.getState();
+
+    // 1. Area mode - Small polygon (< 10,000 m²) -> m²
+    setActiveToolMode('area');
+    addToolPoint([-122.4194, 37.7749]);
+    addToolPoint([-122.4190, 37.7749]);
+    expect(useMapStore.getState().measurementValue).toBeNull(); // Needs >= 3 points
+    addToolPoint([-122.4190, 37.7753]);
+    addToolPoint([-122.4194, 37.7753]);
+    expect(useMapStore.getState().measurementValue).toMatch(/^\d+\s+m²$/);
+
+    // 2. Area mode - Medium polygon (10,000 m² - 1,000,000 m²) -> ha
+    clearToolPoints();
+    addToolPoint([-122.420, 37.770]);
+    addToolPoint([-122.415, 37.770]);
+    addToolPoint([-122.415, 37.775]);
+    addToolPoint([-122.420, 37.775]);
+    expect(useMapStore.getState().measurementValue).toMatch(/^\d+\.\d{2}\s+ha$/);
+
+    // 3. Polygon mode - Large polygon (>= 1,000,000 m²) -> km²
+    setActiveToolMode('polygon');
+    addToolPoint([-122.5, 37.7]);
+    addToolPoint([-122.4, 37.7]);
+    addToolPoint([-122.4, 37.8]);
+    addToolPoint([-122.5, 37.8]);
+    expect(useMapStore.getState().measurementValue).toMatch(/^\d+\.\d{2}\s+km²$/);
+
+    // 4. Line mode calculates path length
+    setActiveToolMode('line');
+    addToolPoint([-122.4194, 37.7749]);
+    addToolPoint([-122.4094, 37.7849]);
+    expect(useMapStore.getState().measurementValue).toMatch(/km|m/);
+
+    // 5. Point mode records points without throwing
+    setActiveToolMode('point');
+    addToolPoint([-122.4194, 37.7749]);
+    addToolPoint([-122.4094, 37.7849]);
+    expect(useMapStore.getState().toolPoints.length).toBe(2);
     expect(useMapStore.getState().measurementValue).toBeNull();
   });
 

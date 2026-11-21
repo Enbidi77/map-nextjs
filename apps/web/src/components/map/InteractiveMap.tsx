@@ -11,7 +11,6 @@ import type {
   GeoJSONFeatureCollection,
   GeoJSONPoint,
   GeoJSONLineString,
-  GeoJSONPolygon,
   GeoJSONFeature,
   Coordinate,
 } from '@modern-maps/types';
@@ -78,14 +77,22 @@ export function InteractiveMap({
   // Map Click Handler (delegates to tool points if tool active, else POI clicks)
   const handleMapClick = React.useCallback(
     (e: any) => {
-      if (activeToolMode !== 'none') {
-        const coord: Coordinate = e.coordinate || [e.lngLat?.lng, e.lngLat?.lat];
-        if (coord && typeof coord[0] === 'number' && typeof coord[1] === 'number') {
+      const mode = useMapStore.getState().activeToolMode;
+      if (mode !== 'none') {
+        const coord: Coordinate | undefined =
+          e?.coordinate || (e?.lngLat ? [e.lngLat.lng, e.lngLat.lat] : undefined);
+        if (
+          coord &&
+          typeof coord[0] === 'number' &&
+          !isNaN(coord[0]) &&
+          typeof coord[1] === 'number' &&
+          !isNaN(coord[1])
+        ) {
           addToolPoint(coord);
         }
       }
     },
-    [activeToolMode, addToolPoint]
+    [addToolPoint]
   );
 
   // Initialize Places Layer when native MapLibre instance is available
@@ -162,10 +169,16 @@ export function InteractiveMap({
           });
 
           native.on('mouseenter', 'places-poi-circle', () => {
-            if (native.getCanvas()) native.getCanvas().style.cursor = 'pointer';
+            if (native.getCanvas()) {
+              native.getCanvas().style.cursor =
+                useMapStore.getState().activeToolMode !== 'none' ? 'crosshair' : 'pointer';
+            }
           });
           native.on('mouseleave', 'places-poi-circle', () => {
-            if (native.getCanvas()) native.getCanvas().style.cursor = '';
+            if (native.getCanvas()) {
+              native.getCanvas().style.cursor =
+                useMapStore.getState().activeToolMode !== 'none' ? 'crosshair' : '';
+            }
           });
         }
       } catch {
@@ -191,68 +204,155 @@ export function InteractiveMap({
     const native = mapInstance.getNativeMap() as MapLibreMap | null;
     if (!native) return;
 
-    try {
-      if (activeToolMode !== 'none' && toolPoints.length > 0) {
-        // Line or Polygon GeoJSON
-        const isPoly = activeToolMode === 'area' || activeToolMode === 'polygon';
-        const coords = isPoly && toolPoints.length >= 3
-          ? [...toolPoints, toolPoints[0]!]
-          : toolPoints;
+    const syncToolLayers = () => {
+      try {
+        // Update map canvas cursor: crosshair when tool active, reset when none
+        const canvas = native.getCanvas?.();
+        if (canvas) {
+          canvas.style.cursor = activeToolMode !== 'none' ? 'crosshair' : '';
+        }
 
-        const toolData: GeoJSONFeature<GeoJSONLineString | GeoJSONPolygon> = isPoly && toolPoints.length >= 3
-          ? {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'Polygon', coordinates: [coords] },
-            }
-          : {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'LineString', coordinates: toolPoints },
-            };
+        if (activeToolMode !== 'none') {
+          const features: GeoJSONFeature[] = [];
 
-        const existingSource = native.getSource('tool-active-source') as any;
-        if (existingSource && typeof existingSource.setData === 'function') {
-          existingSource.setData(toolData);
-        } else if (!existingSource) {
-          native.addSource('tool-active-source', {
-            type: 'geojson',
-            data: toolData as any,
+          // 1. Point features for all clicked vertices
+          toolPoints.forEach((pt, index) => {
+            features.push({
+              type: 'Feature',
+              id: `tool-point-${index}`,
+              properties: { index },
+              geometry: {
+                type: 'Point',
+                coordinates: pt,
+              },
+            });
           });
+
+          // 2. LineString feature (if >= 2 points) - excludes point mode
+          if (activeToolMode !== 'point' && toolPoints.length >= 2) {
+            const isPoly = activeToolMode === 'area' || activeToolMode === 'polygon';
+            const lineCoords =
+              isPoly && toolPoints.length >= 3
+                ? [...toolPoints, toolPoints[0]!]
+                : toolPoints;
+
+            features.push({
+              type: 'Feature',
+              id: 'tool-line',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: lineCoords,
+              },
+            });
+          }
+
+          // 3. Polygon feature (if mode is area or polygon and >= 3 points)
+          if (
+            (activeToolMode === 'area' || activeToolMode === 'polygon') &&
+            toolPoints.length >= 3
+          ) {
+            features.push({
+              type: 'Feature',
+              id: 'tool-polygon',
+              properties: {},
+              geometry: {
+                type: 'Polygon',
+                coordinates: [[...toolPoints, toolPoints[0]!]],
+              },
+            });
+          }
+
+          const featureCollection: GeoJSONFeatureCollection = {
+            type: 'FeatureCollection',
+            features,
+          };
+
+          const existingSource = native.getSource('tool-active-source') as any;
+          if (existingSource && typeof existingSource.setData === 'function') {
+            existingSource.setData(featureCollection);
+          } else if (!existingSource) {
+            native.addSource('tool-active-source', {
+              type: 'geojson',
+              data: featureCollection as any,
+            });
+          }
 
           // Fill for area / polygon
-          native.addLayer({
-            id: 'tool-active-fill',
-            type: 'fill',
-            source: 'tool-active-source',
-            paint: {
-              'fill-color': '#10b981',
-              'fill-opacity': 0.25,
-            },
-          });
+          if (!native.getLayer('tool-active-fill')) {
+            native.addLayer({
+              id: 'tool-active-fill',
+              type: 'fill',
+              source: 'tool-active-source',
+              filter: ['==', '$type', 'Polygon'],
+              paint: {
+                'fill-color': '#10b981',
+                'fill-opacity': 0.25,
+              },
+            });
+          }
 
           // Line stroke
-          native.addLayer({
-            id: 'tool-active-line',
-            type: 'line',
-            source: 'tool-active-source',
-            layout: { 'line-join': 'round', 'line-cap': 'round' },
-            paint: {
-              'line-color': '#10b981',
-              'line-width': 3,
-              'line-dasharray': [2, 1.5],
-            },
-          });
+          if (!native.getLayer('tool-active-line')) {
+            native.addLayer({
+              id: 'tool-active-line',
+              type: 'line',
+              source: 'tool-active-source',
+              filter: ['==', '$type', 'LineString'],
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: {
+                'line-color': '#10b981',
+                'line-width': 3,
+                'line-dasharray': [2, 1.5],
+              },
+            });
+          }
+
+          // Active points (crisp green dots with white border)
+          if (!native.getLayer('tool-active-points')) {
+            native.addLayer({
+              id: 'tool-active-points',
+              type: 'circle',
+              source: 'tool-active-source',
+              filter: ['==', '$type', 'Point'],
+              paint: {
+                'circle-radius': 5,
+                'circle-color': '#10b981',
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff',
+              },
+            });
+          }
+        } else {
+          if (native.getLayer?.('tool-active-points')) native.removeLayer('tool-active-points');
+          if (native.getLayer?.('tool-active-line')) native.removeLayer('tool-active-line');
+          if (native.getLayer?.('tool-active-fill')) native.removeLayer('tool-active-fill');
+          if (native.getSource?.('tool-active-source')) native.removeSource('tool-active-source');
         }
-      } else {
-        if (native.getLayer?.('tool-active-fill')) native.removeLayer('tool-active-fill');
-        if (native.getLayer?.('tool-active-line')) native.removeLayer('tool-active-line');
-        if (native.getSource?.('tool-active-source')) native.removeSource('tool-active-source');
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
+    };
+
+    if (native.isStyleLoaded?.()) {
+      syncToolLayers();
+    } else {
+      native.once?.('load', syncToolLayers);
+      native.on?.('styledata', syncToolLayers);
     }
-  }, [mapInstance, activeToolMode, toolPoints]);
+
+    return () => {
+      native.off?.('styledata', syncToolLayers);
+      try {
+        const c = native.getCanvas?.();
+        if (c && c.style.cursor === 'crosshair') {
+          c.style.cursor = '';
+        }
+      } catch {
+        // ignore
+      }
+    };
+  }, [mapInstance, activeToolMode, toolPoints, activeStyle]);
 
   // Synchronize Directions Route Line
   React.useEffect(() => {
@@ -401,8 +501,9 @@ export function InteractiveMap({
         }}
         canClear={toolPoints.length > 0}
         canFinish={
-          (activeToolMode === 'distance' && toolPoints.length >= 2) ||
-          ((activeToolMode === 'area' || activeToolMode === 'polygon') && toolPoints.length >= 3)
+          ((activeToolMode === 'distance' || activeToolMode === 'line') && toolPoints.length >= 2) ||
+          ((activeToolMode === 'area' || activeToolMode === 'polygon') && toolPoints.length >= 3) ||
+          (activeToolMode === 'point' && toolPoints.length >= 1)
         }
         measurementValue={measurementValue}
         pointsCount={toolPoints.length}

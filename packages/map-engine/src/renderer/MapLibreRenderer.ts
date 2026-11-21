@@ -84,6 +84,11 @@ export class MapLibreRenderer implements MapRenderer {
       styleToApply = defaultSt.styleObject ?? defaultSt.url;
     }
 
+    if (this._map) {
+      this._isLoaded = true;
+      return Promise.resolve();
+    }
+
     return new Promise((resolve, reject) => {
       try {
         const mapOptions: any = {

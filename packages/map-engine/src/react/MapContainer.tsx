@@ -77,6 +77,28 @@ const MapContainerInner: React.FC<MapContainerProps> = ({
   const [markerManager, setMarkerManager] = useState<MarkerManager | null>(null);
   const [controls, setControls] = useState<MapControlsController | null>(null);
 
+  // Keep latest callbacks in refs to prevent stale closure bugs
+  const onClickRef = useRef(onClick);
+  onClickRef.current = onClick;
+
+  const onCameraChangeRef = useRef(onCameraChange);
+  onCameraChangeRef.current = onCameraChange;
+
+  const onMapReadyRef = useRef(onMapReady);
+  onMapReadyRef.current = onMapReady;
+
+  useEffect(() => {
+    onClickRef.current = onClick;
+  }, [onClick]);
+
+  useEffect(() => {
+    onCameraChangeRef.current = onCameraChange;
+  }, [onCameraChange]);
+
+  useEffect(() => {
+    onMapReadyRef.current = onMapReady;
+  }, [onMapReady]);
+
   // Initialize Map
   useEffect(() => {
     if (!containerRef.current) return;
@@ -122,7 +144,7 @@ const MapContainerInner: React.FC<MapContainerProps> = ({
           if (!isMounted) return;
           const currentCam = renderer.getCameraState();
           setCamera(currentCam);
-          onCameraChange?.(currentCam);
+          onCameraChangeRef.current?.(currentCam);
         };
 
         renderer.on('move', handleCameraUpdate);
@@ -132,13 +154,13 @@ const MapContainerInner: React.FC<MapContainerProps> = ({
 
         // Listen for map clicks
         renderer.on('click', (e: any) => {
-          if (!isMounted || !onClick) return;
+          if (!isMounted || !onClickRef.current) return;
           const point = e.point ?? { x: 0, y: 0 };
           const coordinate: Coordinate = e.lngLat
             ? [e.lngLat.lng, e.lngLat.lat]
             : renderer.unproject(point);
 
-          onClick({
+          onClickRef.current({
             type: 'click',
             coordinate,
             point,
@@ -147,7 +169,7 @@ const MapContainerInner: React.FC<MapContainerProps> = ({
           });
         });
 
-        onMapReady?.(renderer);
+        onMapReadyRef.current?.(renderer);
       } catch (err) {
         if (isMounted) {
           setError(err instanceof Error ? err : new Error(String(err)));

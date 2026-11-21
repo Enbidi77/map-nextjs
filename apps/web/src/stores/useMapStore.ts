@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { CameraState, Coordinate, PlaceModel, PlaceSearchResult } from '@modern-maps/types';
 import type { MeasurementDrawingMode } from '@modern-maps/ui';
+import { calculatePolygonArea, calculatePathLength } from '@modern-maps/geospatial';
 import { MOCK_PLACES } from '../data/mockPlaces';
 
 export type SidebarView = 'search' | 'place' | 'directions' | 'saved';
@@ -378,30 +379,32 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
       const nextPoints = [...state.toolPoints, pt];
       let measurementValue: string | null = null;
 
-      if (state.activeToolMode === 'distance' && nextPoints.length >= 2) {
-        // Calculate cumulative distance in meters using Haversine
-        let totalMeters = 0;
-        const R = 6371000;
-        for (let i = 0; i < nextPoints.length - 1; i++) {
-          const [lngA, latA] = nextPoints[i]!;
-          const [lngB, latB] = nextPoints[i + 1]!;
-          const dLat = ((latB - latA) * Math.PI) / 180;
-          const dLon = ((lngB - lngA) * Math.PI) / 180;
-          const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos((latA * Math.PI) / 180) *
-              Math.cos((latB * Math.PI) / 180) *
-              Math.sin(dLon / 2) ** 2;
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          totalMeters += R * c;
-        }
+      if (
+        (state.activeToolMode === 'distance' || state.activeToolMode === 'line') &&
+        nextPoints.length >= 2
+      ) {
+        const totalMeters = calculatePathLength(nextPoints, 'meters');
         measurementValue =
           totalMeters >= 1000
             ? `${(totalMeters / 1000).toFixed(2)} km`
             : `${Math.round(totalMeters)} m`;
-      } else if (state.activeToolMode === 'area' && nextPoints.length >= 3) {
-        // Approximate planar area
-        measurementValue = `${nextPoints.length} vertices`;
+      } else if (
+        (state.activeToolMode === 'area' || state.activeToolMode === 'polygon') &&
+        nextPoints.length >= 3
+      ) {
+        try {
+          const ring = [...nextPoints, nextPoints[0]!];
+          const areaSqMeters = calculatePolygonArea([ring], 'meters');
+          if (areaSqMeters >= 1_000_000) {
+            measurementValue = `${(areaSqMeters / 1_000_000).toFixed(2)} km²`;
+          } else if (areaSqMeters >= 10_000) {
+            measurementValue = `${(areaSqMeters / 10_000).toFixed(2)} ha`;
+          } else {
+            measurementValue = `${Math.round(areaSqMeters)} m²`;
+          }
+        } catch {
+          measurementValue = null;
+        }
       }
 
       return {
