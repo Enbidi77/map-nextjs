@@ -49,6 +49,18 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      fontFamily: {
+        sans: [
+          'Inter',
+          'Be Vietnam Pro',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          'sans-serif',
+        ],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
     },
   },
   plugins: [],

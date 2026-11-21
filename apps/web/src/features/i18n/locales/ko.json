@@ -54,6 +54,7 @@
   "search.foodDrink": "음식 및 다이닝",
   "search.entertainment": "엔터테인먼트",
   "search.popularHighlights": "인기 주요 장소",
+  "search.searchThisArea": "이 지역 검색",
   "search.resultsFor": "\"{query}\" 검색 결과",
   "search.placesCount": "{count}개 장소",
   "search.placeCountSingle": "1개 장소",

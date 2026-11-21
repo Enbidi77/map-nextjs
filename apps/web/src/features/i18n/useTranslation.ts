@@ -37,7 +37,9 @@ const getInitialLocale = (): Locale => {
       if (raw && isLocale(raw)) {
         return raw;
       }
-    } catch {}
+    } catch {
+      // ignore storage access errors
+    }
   }
   return DEFAULT_LOCALE;
 };
@@ -56,7 +58,9 @@ export const useI18nStore = create<I18nStoreState>()(
         if (typeof window !== 'undefined' && window.localStorage) {
           try {
             window.localStorage.setItem('locale', locale);
-          } catch {}
+          } catch {
+            // ignore storage access errors
+          }
         }
       },
       t: (key: TranslationKey | string, params?: Record<string, string | number>) => {

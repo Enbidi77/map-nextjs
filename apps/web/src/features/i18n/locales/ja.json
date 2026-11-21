@@ -54,6 +54,7 @@
   "search.foodDrink": "グルメ・飲食店",
   "search.entertainment": "エンターテインメント",
   "search.popularHighlights": "人気のスポット",
+  "search.searchThisArea": "このエリアを検索",
   "search.resultsFor": "\"{query}\" の検索結果",
   "search.placesCount": "{count}件の場所",
   "search.placeCountSingle": "1件の場所",

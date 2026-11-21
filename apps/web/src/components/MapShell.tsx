@@ -30,27 +30,26 @@ export function MapShell() {
   const [isLayerSelectorOpen, setIsLayerSelectorOpen] = React.useState(false);
 
   return (
-    <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-background">
-      {/* Top Navigation Bar */}
+    <div className="relative h-screen w-screen overflow-hidden bg-background">
+      {/* Full-bleed 100vw × 100vh MapLibre GL Interactive Canvas */}
+      <div className="absolute inset-0 h-full w-full">
+        <DynamicInteractiveMap
+          isLayerSelectorOpen={isLayerSelectorOpen}
+          onToggleLayerSelector={() => setIsLayerSelectorOpen((prev) => !prev)}
+        />
+      </div>
+
+      {/* Floating Translucent Top Navigation Islands (Top-Left Search & Top-Right Controls) */}
       <TopNavBar
         isLayerSelectorOpen={isLayerSelectorOpen}
         onToggleLayerSelector={() => setIsLayerSelectorOpen((prev) => !prev)}
       />
 
-      {/* Main Workspace: Resizable Sidebar + Map Canvas */}
-      <main className="relative flex flex-1 h-[calc(100vh-3.5rem)] mt-14 w-full overflow-hidden">
-        {/* Desktop / Tablet Resizable Sidebar */}
-        <ResizableSidebar />
+      {/* Desktop / Tablet Resizable Sidebar */}
+      <ResizableSidebar />
 
-        {/* MapLibre GL Interactive Canvas & Controls */}
-        <DynamicInteractiveMap
-          isLayerSelectorOpen={isLayerSelectorOpen}
-          onToggleLayerSelector={() => setIsLayerSelectorOpen((prev) => !prev)}
-        />
-
-        {/* Mobile Viewport Responsive Bottom Sheet */}
-        <MobileBottomSheet />
-      </main>
+      {/* Mobile Viewport Responsive Bottom Sheet */}
+      <MobileBottomSheet />
     </div>
   );
 }

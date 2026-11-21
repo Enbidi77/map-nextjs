@@ -80,15 +80,15 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
       <div
         ref={ref}
         className={cn(
-          'inline-flex items-center gap-2 rounded-lg border border-border/60 bg-background/80 px-2.5 py-1 text-xs text-foreground shadow-sm backdrop-blur-md select-none transition-all',
+          'inline-flex items-center gap-2 rounded-lg border border-black/5 dark:border-white/10 bg-white/90 dark:bg-slate-900/90 px-2.5 py-1 text-xs text-foreground shadow-sm backdrop-blur-md select-none transition-all tabular-nums',
           className
         )}
         {...props}
       >
         {/* Coordinates */}
-        <div className="flex items-center gap-1 font-mono text-[11px]">
+        <div className="flex items-center gap-1 font-mono text-[11px] tabular-nums">
           <MapPin className="h-3 w-3 text-primary shrink-0" />
-          <span className="truncate">{formattedCoords}</span>
+          <span className="truncate tabular-nums">{formattedCoords}</span>
         </div>
 
         {/* Copy Button */}
@@ -112,7 +112,7 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
         {zoom !== undefined && (
           <>
             <span className="text-border">|</span>
-            <span className="font-mono text-[11px] text-muted-foreground">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
               z: {zoom.toFixed(1)}
             </span>
           </>
@@ -122,7 +122,7 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
         {((pitch && pitch > 0) || (bearing && bearing !== 0)) && (
           <>
             <span className="text-border">|</span>
-            <span className="font-mono text-[10px] text-muted-foreground">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
               {pitch && pitch > 0 ? `P: ${Math.round(pitch)}° ` : ''}
               {bearing && bearing !== 0 ? `B: ${Math.round(bearing)}°` : ''}
             </span>
@@ -133,7 +133,7 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
         {showElevation && elevation !== undefined && (
           <>
             <span className="text-border">|</span>
-            <span className="font-mono text-[11px] text-muted-foreground">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
               {Math.round(elevation)}m
             </span>
           </>
@@ -144,7 +144,7 @@ export const CoordinateBadge = React.forwardRef<HTMLDivElement, CoordinateBadgeP
           <>
             <span className="text-border">|</span>
             <div className="flex flex-col items-center">
-              <span className="text-[10px] font-mono leading-none text-muted-foreground">
+              <span className="text-[10px] font-mono tabular-nums leading-none text-muted-foreground">
                 {scaleText}
               </span>
               <div className="mt-0.5 h-[2px] w-8 bg-foreground/60" />

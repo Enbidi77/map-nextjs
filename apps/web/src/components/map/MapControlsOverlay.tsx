@@ -9,6 +9,7 @@ import {
 } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useTranslation } from '../../features/i18n';
+import { useResponsive } from '../../hooks/useMediaQuery';
 import type { MapRenderer } from '@modern-maps/map-engine';
 import type { Coordinate } from '@modern-maps/types';
 
@@ -26,8 +27,11 @@ export function MapControlsOverlay({
   onToggleLayerSelector,
 }: MapControlsOverlayProps) {
   const { t } = useTranslation();
+  const { isMobile } = useResponsive();
   const camera = useMapStore((state) => state.camera);
   const setCamera = useMapStore((state) => state.setCamera);
+  const sidebarOpen = useMapStore((state) => state.sidebarOpen);
+  const sidebarWidth = useMapStore((state) => state.sidebarWidth);
   const activeStyle = useMapStore((state) => state.activeStyle);
   const setActiveStyle = useMapStore((state) => state.setActiveStyle);
   const overlays = useMapStore((state) => state.overlays);
@@ -66,13 +70,12 @@ export function MapControlsOverlay({
     }
   };
 
-  // Bearing / Compass reset
+  // Bearing / Compass reset: smooth animation back to North-up (B: 0°, P: 0°)
   const handleResetBearing = () => {
     if (mapInstance) {
-      mapInstance.resetNorth();
-    } else {
-      setCamera((prev) => ({ ...prev, bearing: 0 }));
+      mapInstance.easeTo({ bearing: 0, pitch: 0, duration: 500 });
     }
+    setCamera((prev) => ({ ...prev, bearing: 0, pitch: 0 }));
   };
 
   // 3D / Pitch toggle
@@ -213,8 +216,11 @@ export function MapControlsOverlay({
         </div>
       )}
 
-      {/* Coordinate & Scale Readout Badge (Bottom-Left) */}
-      <div className="absolute bottom-5 left-4 z-20 pointer-events-auto">
+      {/* Coordinate & Scale Readout Badge (Bottom-Left) dynamically offset from floating sidebar */}
+      <div
+        className="absolute bottom-5 z-20 pointer-events-auto transition-[left] duration-300 ease-in-out"
+        style={{ left: sidebarOpen && !isMobile ? `${sidebarWidth + 24}px` : '16px' }}
+      >
         <CoordinateBadge
           longitude={lng}
           latitude={lat}

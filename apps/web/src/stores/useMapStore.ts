@@ -78,7 +78,10 @@ interface MapStoreState {
   // Live API Search Results
   liveSearchResults: PlaceSearchResult[];
   isSearching: boolean;
+  isViewportOutOfSync: boolean;
+  setIsViewportOutOfSync: (outOfSync: boolean) => void;
   executeSearch: (query: string, category?: string | null) => Promise<void>;
+  searchThisArea: (bounds?: [number, number, number, number]) => Promise<void>;
 
   // Collections
   collections: PlaceCollectionItem[];
@@ -319,10 +322,62 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
         relevanceScore: 1 - idx * 0.1,
       })),
       isSearching: false,
+      isViewportOutOfSync: false,
     });
     if (q && matched.length > 0) {
       get().setSelectedPlace(matched[0]!);
     }
+  },
+  isViewportOutOfSync: false,
+  setIsViewportOutOfSync: (isViewportOutOfSync) => set({ isViewportOutOfSync }),
+  searchThisArea: async (bounds) => {
+    set({ isSearching: true, isViewportOutOfSync: false });
+    const [centerLng, centerLat] = get().camera.center;
+    const cat = get().selectedCategory;
+
+    // Filter places inside bounds if explicit bounds provided
+    let matched: typeof MOCK_PLACES = [];
+    if (bounds && bounds.length === 4) {
+      const [w, s, e, n] = bounds;
+      matched = MOCK_PLACES.filter((p) => {
+        const [lng, lat] = p.coordinates;
+        const inBounds = lng >= w && lng <= e && lat >= s && lat <= n;
+        const matchCat = cat && cat !== 'all' ? p.category === cat : true;
+        return inBounds && matchCat;
+      });
+    }
+
+    // If no places inside explicit bounds or no bounds provided, query by distance to center
+    if (matched.length === 0) {
+      const R = 6371; // km
+      const sorted = [...MOCK_PLACES]
+        .filter((p) => (cat && cat !== 'all' ? p.category === cat : true))
+        .map((p) => {
+          const [pLng, pLat] = p.coordinates;
+          const dLat = ((pLat - centerLat) * Math.PI) / 180;
+          const dLon = ((pLng - centerLng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((centerLat * Math.PI) / 180) *
+              Math.cos((pLat * Math.PI) / 180) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return { place: p, dist: R * c };
+        })
+        .sort((a, b) => a.dist - b.dist);
+
+      matched = sorted.slice(0, 8).map((s) => s.place);
+    }
+
+    set({
+      liveSearchResults: matched.map((p, idx) => ({
+        place: p,
+        relevanceScore: Math.max(0.1, 1 - idx * 0.1),
+      })),
+      isSearching: false,
+      isViewportOutOfSync: false,
+    });
   },
 
   // Collections

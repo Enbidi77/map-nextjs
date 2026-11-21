@@ -267,4 +267,36 @@ describe('useMapStore', () => {
     expect(state.camera.center[0]).toBeGreaterThan(100);
     expect(state.camera.center[1]).toBeGreaterThan(7);
   });
+
+  it('includes Hạ Long Bay in mock places and deduplicates Việt Nam subtitle', () => {
+    const halong = MOCK_PLACES.find((p) => p.name === 'Hạ Long Bay');
+    expect(halong).toBeDefined();
+    expect(halong?.address).toBe('Quảng Ninh, Việt Nam');
+    expect(halong?.category).toBe('nature');
+
+    const vietnam = MOCK_PLACES.find((p) => p.id === 'place-vietnam');
+    expect(vietnam).toBeDefined();
+    expect(vietnam?.name).toBe('Việt Nam');
+    expect(vietnam?.address).not.toBe('Việt Nam');
+  });
+
+  it('manages viewport sync and "Search this area" updates', async () => {
+    const { setIsViewportOutOfSync, searchThisArea } = useMapStore.getState();
+
+    // Toggle viewport out of sync
+    setIsViewportOutOfSync(true);
+    expect(useMapStore.getState().isViewportOutOfSync).toBe(true);
+
+    // Search this area with Northern Vietnam bounds (including Hanoi & Ha Long Bay)
+    await searchThisArea([105.0, 20.0, 108.0, 22.0]);
+
+    const state = useMapStore.getState();
+    expect(state.isViewportOutOfSync).toBe(false);
+    expect(state.liveSearchResults.length).toBeGreaterThan(0);
+
+    const hasNorthernVietnamPlace = state.liveSearchResults.some(
+      ({ place }) => place.name === 'Hà Nội' || place.name === 'Hạ Long Bay'
+    );
+    expect(hasNorthernVietnamPlace).toBe(true);
+  });
 });

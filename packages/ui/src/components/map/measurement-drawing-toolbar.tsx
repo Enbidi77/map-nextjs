@@ -99,12 +99,20 @@ export const MeasurementDrawingToolbar = React.forwardRef<
       }
     };
 
+    const getToolButtonClass = (isActive: boolean) =>
+      cn(
+        'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95',
+        isActive
+          ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/30 font-semibold hover:bg-primary/95'
+          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+      );
+
     return (
       <TooltipProvider delayDuration={200}>
         <div
           ref={ref}
           className={cn(
-            'absolute z-30 flex items-center gap-1 rounded-xl border border-border/70 bg-background/95 p-1.5 shadow-xl backdrop-blur-md transition-all',
+            'absolute z-30 flex items-center gap-1 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-black/5 dark:border-white/10 p-1.5 transition-all',
             orientation === 'vertical' ? 'flex-col' : 'flex-row',
             position ? positionClasses[position] : '',
             className
@@ -119,11 +127,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <button
                   type="button"
                   onClick={() => handleToggleMode('distance')}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95',
-                    activeMode === 'distance' &&
-                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
-                  )}
+                  className={getToolButtonClass(activeMode === 'distance')}
                   aria-label={distanceLabel}
                 >
                   <Ruler className="h-4 w-4" />
@@ -138,11 +142,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <button
                   type="button"
                   onClick={() => handleToggleMode('area')}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95',
-                    activeMode === 'area' &&
-                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
-                  )}
+                  className={getToolButtonClass(activeMode === 'area')}
                   aria-label={areaLabel}
                 >
                   <Maximize2 className="h-4 w-4" />
@@ -154,7 +154,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
 
           <div
             className={cn(
-              'bg-border/60',
+              'bg-black/10 dark:bg-white/10',
               orientation === 'vertical' ? 'h-[1px] w-full my-0.5' : 'w-[1px] h-5 mx-0.5'
             )}
           />
@@ -167,11 +167,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <button
                   type="button"
                   onClick={() => handleToggleMode('point')}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95',
-                    activeMode === 'point' &&
-                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
-                  )}
+                  className={getToolButtonClass(activeMode === 'point')}
                   aria-label={pointLabel}
                 >
                   <MapPin className="h-4 w-4" />
@@ -186,11 +182,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <button
                   type="button"
                   onClick={() => handleToggleMode('line')}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95',
-                    activeMode === 'line' &&
-                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
-                  )}
+                  className={getToolButtonClass(activeMode === 'line')}
                   aria-label={lineLabel}
                 >
                   <Spline className="h-4 w-4" />
@@ -205,11 +197,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <button
                   type="button"
                   onClick={() => handleToggleMode('polygon')}
-                  className={cn(
-                    'flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition-all hover:bg-accent hover:text-accent-foreground active:scale-95',
-                    activeMode === 'polygon' &&
-                      'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground shadow-sm'
-                  )}
+                  className={getToolButtonClass(activeMode === 'polygon')}
                   aria-label={polygonLabel}
                 >
                   <Hexagon className="h-4 w-4" />
@@ -224,18 +212,18 @@ export const MeasurementDrawingToolbar = React.forwardRef<
             <>
               <div
                 className={cn(
-                  'bg-border/60',
+                  'bg-black/10 dark:bg-white/10',
                   orientation === 'vertical' ? 'h-[1px] w-full my-0.5' : 'w-[1px] h-5 mx-0.5'
                 )}
               />
 
               <div className="flex items-center gap-1.5 px-1.5">
                 {measurementValue !== null && measurementValue !== undefined ? (
-                  <Badge variant="secondary" className="font-mono text-xs font-semibold">
+                  <Badge variant="secondary" className="font-mono text-xs font-semibold tabular-nums">
                     {measurementValue} {measurementUnit || ''}
                   </Badge>
                 ) : pointsCount > 0 ? (
-                  <Badge variant="outline" className="font-mono text-[10px]">
+                  <Badge variant="outline" className="font-mono text-[10px] tabular-nums">
                     {pointsCount} pt{pointsCount > 1 ? 's' : ''}
                   </Badge>
                 ) : (

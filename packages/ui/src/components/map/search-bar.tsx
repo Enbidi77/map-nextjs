@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Search, X, Loader2, Navigation } from 'lucide-react';
+import { Search, X, Loader2, ArrowRight } from 'lucide-react';
 import { cn } from '../../lib/utils.js';
 
 export interface SearchBarProps
@@ -13,6 +13,7 @@ export interface SearchBarProps
   shortcut?: string;
   showDirectionsButton?: boolean;
   onDirectionsClick?: () => void;
+  showSubmitButton?: boolean;
   rightSlot?: React.ReactNode;
 }
 
@@ -30,6 +31,7 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
       placeholder = 'Search places, coordinates, or addresses...',
       showDirectionsButton = false,
       onDirectionsClick,
+      showSubmitButton = true,
       rightSlot,
       onKeyDown,
       ...props
@@ -108,31 +110,32 @@ export const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
           <button
             type="button"
             onClick={handleClear}
-            className="mr-1.5 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-90"
+            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-90"
             aria-label="Clear search"
+            title="Clear search"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
 
-        {/* Shortcut Badge */}
+        {/* Submit / Search Action Button */}
+        {value && onSearch && showSubmitButton && (
+          <button
+            type="button"
+            onClick={() => onSearch(value)}
+            className="ml-1 flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary transition-all hover:bg-primary hover:text-primary-foreground active:scale-95"
+            aria-label="Submit search"
+            title="Search"
+          >
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        )}
+
+        {/* Shortcut Badge when empty */}
         {!value && shortcut && (
           <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
             {shortcut}
           </kbd>
-        )}
-
-        {/* Directions Button shortcut */}
-        {showDirectionsButton && (
-          <button
-            type="button"
-            onClick={onDirectionsClick}
-            className="ml-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20 active:scale-95"
-            title="Directions"
-            aria-label="Directions"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-          </button>
         )}
 
         {/* Custom Right Slot */}

@@ -9,7 +9,11 @@ import { PlaceDetailsView } from './PlaceDetailsView';
 import { DirectionsView } from './DirectionsView';
 import { SavedPlacesView } from './SavedPlacesView';
 
-export function SidebarContent() {
+export interface SidebarContentProps {
+  hideTabs?: boolean;
+}
+
+export function SidebarContent({ hideTabs = false }: SidebarContentProps) {
   const { t } = useTranslation();
   const sidebarView = useMapStore((state) => state.sidebarView);
   const setSidebarView = useMapStore((state) => state.setSidebarView);
@@ -23,34 +27,36 @@ export function SidebarContent() {
 
   return (
     <div className="flex flex-col gap-3 w-full min-w-0 max-w-full">
-      {/* Top Tab Switcher */}
-      <div className="flex rounded-lg border border-border/60 bg-muted/40 p-1 w-full min-w-0">
-        {TABS.map((tab) => {
-          const isActive =
-            sidebarView === tab.id || (tab.id === 'search' && sidebarView === 'place');
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              suppressHydrationWarning
-              onClick={() => setSidebarView(tab.id)}
-              className={`flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-1.5 rounded-md py-1.5 px-1 text-xs font-medium transition-all ${
-                isActive
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span className="shrink-0">{tab.icon}</span>
-              <span className="truncate">{tab.label}</span>
-              {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-primary/20 px-1 font-mono text-[9px] font-bold text-primary">
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Top Tab Switcher (omitted when hosted in floating panel sticky header) */}
+      {!hideTabs && (
+        <div className="flex rounded-lg border border-border/60 bg-muted/40 p-1 w-full min-w-0">
+          {TABS.map((tab) => {
+            const isActive =
+              sidebarView === tab.id || (tab.id === 'search' && sidebarView === 'place');
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                suppressHydrationWarning
+                onClick={() => setSidebarView(tab.id)}
+                className={`flex flex-1 min-w-0 items-center justify-center gap-1 sm:gap-1.5 rounded-md py-1.5 px-1 text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <span className="shrink-0">{tab.icon}</span>
+                <span className="truncate">{tab.label}</span>
+                {tab.badge !== undefined && tab.badge > 0 && (
+                  <span className="flex h-3.5 min-w-3.5 shrink-0 items-center justify-center rounded-full bg-primary/20 px-1 font-mono text-[9px] font-bold text-primary">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Dynamic Content Views */}
       {sidebarView === 'search' && <SearchPanel />}

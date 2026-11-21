@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, MapPin, Landmark, Trees, Utensils, Film } from 'lucide-react';
 import { PlaceCard, Badge, Button } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useTranslation } from '../../features/i18n';
@@ -20,39 +20,44 @@ export function SearchPanel() {
   const isSearching = useMapStore((state) => state.isSearching);
 
   const categories = [
-    { id: 'all', label: t('search.all'), icon: '📍' },
-    { id: 'attraction', label: t('search.attraction'), icon: '🏛️' },
-    { id: 'nature', label: t('search.nature'), icon: '🌲' },
-    { id: 'food_drink', label: t('search.foodDrink'), icon: '🍽️' },
-    { id: 'entertainment', label: t('search.entertainment'), icon: '🎭' },
+    { id: 'all', label: t('search.all'), icon: MapPin },
+    { id: 'attraction', label: t('search.attraction'), icon: Landmark },
+    { id: 'nature', label: t('search.nature'), icon: Trees },
+    { id: 'food_drink', label: t('search.foodDrink'), icon: Utensils },
+    { id: 'entertainment', label: t('search.entertainment'), icon: Film },
   ];
 
   return (
     <div className="flex flex-col gap-3 py-1 w-full min-w-0 max-w-full">
-      {/* Category Pills Carousel */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none">
-        {categories.map((cat) => {
-          const isActive =
-            (!selectedCategory && cat.id === 'all') || selectedCategory === cat.id;
-          return (
-            <button
-              key={cat.id}
-              type="button"
-              suppressHydrationWarning
-              onClick={() =>
-                setSelectedCategory(cat.id === 'all' ? null : cat.id)
-              }
-              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
-                isActive
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          );
-        })}
+      {/* Category Pills Strip with right-edge fade gradient */}
+      <div className="relative w-full">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-8">
+          {categories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive =
+              (!selectedCategory && cat.id === 'all') || selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                suppressHydrationWarning
+                onClick={() =>
+                  setSelectedCategory(cat.id === 'all' ? null : cat.id)
+                }
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {/* Soft right-edge fade gradient to hint at scrollability */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-1.5 w-8 bg-gradient-to-l from-background to-transparent" />
       </div>
 
       {/* Results Header */}

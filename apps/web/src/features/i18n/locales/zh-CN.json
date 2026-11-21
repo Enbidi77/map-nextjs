@@ -54,6 +54,7 @@
   "search.foodDrink": "美食与餐饮",
   "search.entertainment": "休闲娱乐",
   "search.popularHighlights": "热门推荐",
+  "search.searchThisArea": "在当前区域搜索",
   "search.resultsFor": "\"{query}\" 的搜索结果",
   "search.placesCount": "{count} 个地点",
   "search.placeCountSingle": "1 个地点",

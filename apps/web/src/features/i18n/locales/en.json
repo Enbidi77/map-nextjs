@@ -54,6 +54,7 @@
   "search.foodDrink": "Food & Dining",
   "search.entertainment": "Entertainment",
   "search.popularHighlights": "Popular Highlights",
+  "search.searchThisArea": "Search this area",
   "search.resultsFor": "Results for \"{query}\"",
   "search.placesCount": "{count} places",
   "search.placeCountSingle": "1 place",

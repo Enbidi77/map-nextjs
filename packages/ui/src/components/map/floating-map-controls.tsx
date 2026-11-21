@@ -2,7 +2,6 @@ import * as React from 'react';
 import {
   Plus,
   Minus,
-  Compass,
   Box,
   Locate,
   Maximize,
@@ -52,7 +51,7 @@ export const MapControlButton = React.forwardRef<
               aria-label={label}
               disabled={disabled || loading}
               className={cn(
-                'group relative flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-all duration-150',
+                'group relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-all duration-150',
                 'hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 'disabled:cursor-not-allowed disabled:opacity-40 active:scale-95',
                 active && 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground',
@@ -183,18 +182,34 @@ export const FloatingMapControls = React.forwardRef<
     const enterFullscreenLabel = labels?.enterFullscreen ?? 'Enter fullscreen';
     const exitFullscreenLabel = labels?.exitFullscreen ?? 'Exit fullscreen';
 
+    const hasZoom = Boolean(onZoomIn || onZoomOut);
+    const hasCamera = Boolean(
+      (showCompass && onResetBearing) ||
+      (show3DToggle && onToggle3D) ||
+      (showGeolocate && onGeolocate)
+    );
+    const hasDisplay = Boolean(
+      (showLayerToggle && onToggleLayerMenu) ||
+      (showFullscreen && onToggleFullscreen)
+    );
+
+    const dividerClass =
+      orientation === 'vertical'
+        ? 'h-[1px] w-full my-0.5 bg-black/10 dark:bg-white/10'
+        : 'w-[1px] h-full mx-0.5 bg-black/10 dark:bg-white/10';
+
     return (
       <div
         ref={ref}
         className={cn(
-          'absolute z-30 flex gap-1.5 p-1 rounded-lg border border-border/60 bg-background/85 shadow-lg backdrop-blur-md transition-all duration-200',
+          'absolute z-30 flex gap-1 p-1 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-black/5 dark:border-white/10 transition-all duration-200',
           orientation === 'vertical' ? 'flex-col' : 'flex-row items-center',
           position ? positionClasses[position] : '',
           className
         )}
         {...props}
       >
-        {/* Zoom controls */}
+        {/* 1. Zoom Controls */}
         {onZoomIn && (
           <MapControlButton
             label={zoomInLabel}
@@ -216,17 +231,12 @@ export const FloatingMapControls = React.forwardRef<
           />
         )}
 
-        {/* Divider if zoom controls exist */}
-        {(onZoomIn || onZoomOut) && (showCompass || show3DToggle || showGeolocate) && (
-          <div
-            className={cn(
-              'bg-border/60',
-              orientation === 'vertical' ? 'h-[1px] w-full my-0.5' : 'w-[1px] h-full mx-0.5'
-            )}
-          />
+        {/* Divider between Zoom and Camera */}
+        {hasZoom && (hasCamera || hasDisplay) && (
+          <div className={dividerClass} />
         )}
 
-        {/* Compass / Reset North */}
+        {/* 2. Camera Controls: Compass with dynamic red North needle tip */}
         {showCompass && onResetBearing && (
           <MapControlButton
             label={bearing === 0 ? orientNorthLabel : resetBearingLabel}
@@ -234,10 +244,37 @@ export const FloatingMapControls = React.forwardRef<
             tooltipSide={tooltipSide}
             onClick={onResetBearing}
             icon={
-              <Compass
-                className="h-4 w-4 transition-transform duration-200"
+              <div
+                className="relative flex h-4 w-4 items-center justify-center transition-transform duration-200"
                 style={{ transform: `rotate(${-bearing}deg)` }}
-              />
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Outer ring */}
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="text-muted-foreground/30"
+                  />
+                  {/* North needle tip (red) pointing to magnetic north */}
+                  <polygon points="12,3 15.5,12 8.5,12" fill="#ef4444" />
+                  {/* South needle tip */}
+                  <polygon
+                    points="12,21 8.5,12 15.5,12"
+                    fill="currentColor"
+                    className="text-muted-foreground/50"
+                  />
+                  {/* Center pivot */}
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                </svg>
+              </div>
             }
           />
         )}
@@ -266,17 +303,12 @@ export const FloatingMapControls = React.forwardRef<
           />
         )}
 
-        {/* Divider for modal/overlay controls */}
-        {(showLayerToggle || showFullscreen) && (
-          <div
-            className={cn(
-              'bg-border/60',
-              orientation === 'vertical' ? 'h-[1px] w-full my-0.5' : 'w-[1px] h-full mx-0.5'
-            )}
-          />
+        {/* Divider between Camera and Display */}
+        {hasCamera && hasDisplay && (
+          <div className={dividerClass} />
         )}
 
-        {/* Layers toggle */}
+        {/* 3. Display Controls: Layers toggle */}
         {showLayerToggle && onToggleLayerMenu && (
           <MapControlButton
             label={layersLabel}

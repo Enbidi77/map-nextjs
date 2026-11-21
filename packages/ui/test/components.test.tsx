@@ -277,4 +277,85 @@ describe('Map UI Wrappers', () => {
     fireEvent.click(saveBtn);
     expect(onSave).toHaveBeenCalledTimes(1);
   });
+
+  it('deduplicates PlaceCard title and subtitle when identical or redundant', () => {
+    const { container, rerender } = render(
+      <PlaceCard
+        name="Việt Nam"
+        subtitle="Việt Nam"
+        address="Việt Nam"
+      />
+    );
+
+    // Only the title "Việt Nam" should be present; duplicate subtitle/address is omitted
+    const occurrences = screen.getAllByText('Việt Nam');
+    expect(occurrences.length).toBe(1);
+
+    // When subtitle has unique hierarchy
+    rerender(
+      <PlaceCard
+        name="Hạ Long Bay"
+        subtitle="Quảng Ninh, Việt Nam"
+      />
+    );
+
+    expect(screen.getByText('Hạ Long Bay')).toBeDefined();
+    expect(screen.getByText('Quảng Ninh, Việt Nam')).toBeDefined();
+  });
+
+  it('renders SearchBar submit action button and omits directions button', () => {
+    const onSearch = vi.fn();
+    render(
+      <SearchBar
+        value="Hanoi"
+        onSearch={onSearch}
+        showDirectionsButton={true}
+      />
+    );
+
+    // Directions button should NOT be present
+    expect(screen.queryByRole('button', { name: /directions/i })).toBeNull();
+
+    // Submit search button should be present
+    const submitBtn = screen.getByRole('button', { name: /submit search/i });
+    expect(submitBtn).toBeDefined();
+    fireEvent.click(submitBtn);
+    expect(onSearch).toHaveBeenCalledWith('Hanoi');
+  });
+
+  it('renders FloatingMapControls with dividers and red North needle on compass', () => {
+    const { container } = render(
+      <FloatingMapControls
+        onZoomIn={() => {}}
+        onZoomOut={() => {}}
+        bearing={90}
+        onResetBearing={() => {}}
+        show3DToggle={true}
+        onToggle3D={() => {}}
+        showLayerToggle={true}
+        onToggleLayerMenu={() => {}}
+      />
+    );
+
+    // Red North needle polygon check (#ef4444)
+    const redNeedle = container.querySelector('polygon[fill="#ef4444"]');
+    expect(redNeedle).toBeDefined();
+    expect(redNeedle).not.toBeNull();
+  });
+
+  it('renders CoordinateBadge with tabular-nums class', () => {
+    const { container } = render(
+      <CoordinateBadge
+        latitude={21.0285}
+        longitude={105.8542}
+        zoom={14.2}
+        pitch={30}
+        bearing={45}
+        scaleText="100 m"
+      />
+    );
+
+    expect(container.querySelector('.tabular-nums')).toBeDefined();
+    expect(container.querySelector('.tabular-nums')).not.toBeNull();
+  });
 });

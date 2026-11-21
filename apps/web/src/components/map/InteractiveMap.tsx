@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { Map as MapLibreMap } from 'maplibre-gl';
+import { RotateCw } from 'lucide-react';
 import { MapContainer, type MapRenderer } from '@modern-maps/map-engine';
 import { MeasurementDrawingToolbar } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
@@ -36,6 +37,17 @@ export function InteractiveMap({
   const directions = useMapStore((state) => state.directions);
   const overlays = useMapStore((state) => state.overlays);
   const liveSearchResults = useMapStore((state) => state.liveSearchResults);
+  const isViewportOutOfSync = useMapStore((state) => state.isViewportOutOfSync);
+  const setIsViewportOutOfSync = useMapStore((state) => state.setIsViewportOutOfSync);
+  const isSearching = useMapStore((state) => state.isSearching);
+  const searchThisArea = useMapStore((state) => state.searchThisArea);
+
+  const lastCenterRef = React.useRef<Coordinate | null>(null);
+
+  React.useEffect(() => {
+    lastCenterRef.current = camera.center;
+    setIsViewportOutOfSync(false);
+  }, [liveSearchResults, setIsViewportOutOfSync]);
 
   // Automatically fly camera or fit bounds when selectedPlace changes
   React.useEffect(() => {
@@ -66,13 +78,37 @@ export function InteractiveMap({
   const addToolPoint = useMapStore((state) => state.addToolPoint);
   const clearToolPoints = useMapStore((state) => state.clearToolPoints);
 
-  // Synchronize camera state from MapContainer
+  // Synchronize camera state from MapContainer and detect viewport drift
   const handleCameraChange = React.useCallback(
     (cam: typeof camera) => {
       setCamera(cam);
+
+      if (lastCenterRef.current) {
+        const [lastLng, lastLat] = lastCenterRef.current;
+        const [currLng, currLat] = cam.center;
+        const dLng = Math.abs(currLng - lastLng);
+        const dLat = Math.abs(currLat - lastLat);
+        // If moved > 0.03 degrees (~3km) away from results center
+        if (dLng > 0.03 || dLat > 0.03) {
+          setIsViewportOutOfSync(true);
+        }
+      }
     },
-    [setCamera]
+    [setCamera, setIsViewportOutOfSync]
   );
+
+  const handleSearchThisArea = React.useCallback(() => {
+    lastCenterRef.current = camera.center;
+    let bounds: [number, number, number, number] | undefined;
+    if (mapInstance) {
+      const native = mapInstance.getNativeMap() as MapLibreMap | null;
+      if (native && typeof native.getBounds === 'function') {
+        const b = native.getBounds();
+        bounds = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+      }
+    }
+    searchThisArea(bounds);
+  }, [camera.center, mapInstance, searchThisArea]);
 
   // Map Click Handler (delegates to tool points if tool active, else POI clicks)
   const handleMapClick = React.useCallback(
@@ -490,6 +526,24 @@ export function InteractiveMap({
         onClick={handleMapClick}
         className="w-full h-full"
       />
+
+      {/* Viewport Synchronization: Floating "Search this area" pill */}
+      {isViewportOutOfSync && (
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 z-20 transition-all duration-300 animate-in fade-in slide-in-from-top-2 ${
+            activeToolMode !== 'none' ? 'top-16' : 'top-4'
+          }`}
+        >
+          <button
+            type="button"
+            onClick={handleSearchThisArea}
+            className="flex items-center gap-2 rounded-full border border-black/5 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 px-4 py-2 text-xs font-semibold text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-white dark:hover:bg-slate-800 hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <RotateCw className={`h-3.5 w-3.5 text-primary ${isSearching ? 'animate-spin' : ''}`} />
+            <span>{t('search.searchThisArea')}</span>
+          </button>
+        </div>
+      )}
 
       {/* Measurement & Drawing Interactive Floating Toolbar */}
       <MeasurementDrawingToolbar

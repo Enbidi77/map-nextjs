@@ -66,6 +66,7 @@ export type KnownTranslationKey =
   | 'search.foodDrink'
   | 'search.entertainment'
   | 'search.popularHighlights'
+  | 'search.searchThisArea'
   | 'search.resultsFor'
   | 'search.placesCount'
   | 'search.placeCountSingle'
