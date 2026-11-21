@@ -17,6 +17,7 @@ import {
   LayerSelector,
   CoordinateBadge,
   PlaceCard,
+  NorthCompass,
   cn,
 } from '../src/index.js';
 
@@ -357,5 +358,26 @@ describe('Map UI Wrappers', () => {
 
     expect(container.querySelector('.tabular-nums')).toBeDefined();
     expect(container.querySelector('.tabular-nums')).not.toBeNull();
+  });
+
+  it('renders NorthCompass, rotates with bearing, and resets North on click', () => {
+    const onResetNorth = vi.fn();
+    const onClick = vi.fn();
+    const { getByTestId, getByRole, getByText } = render(
+      <NorthCompass
+        bearing={45}
+        onResetNorth={onResetNorth}
+        onClick={onClick}
+      />
+    );
+
+    expect(getByText('N')).toBeDefined();
+    const needle = getByTestId('north-compass-needle');
+    expect(needle.style.transform).toBe('rotate(-45deg)');
+
+    const btn = getByRole('button', { name: /reset bearing to north/i });
+    fireEvent.click(btn);
+    expect(onResetNorth).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 });

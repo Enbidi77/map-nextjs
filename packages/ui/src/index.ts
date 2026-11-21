@@ -19,6 +19,7 @@ export * from './components/scroll-area.js';
 
 // Map-Specific UI Wrappers
 export * from './components/map/floating-map-controls.js';
+export * from './components/map/north-compass.js';
 export * from './components/map/collapsible-sidebar.js';
 export * from './components/map/search-bar.js';
 export * from './components/map/layer-selector.js';

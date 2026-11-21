@@ -37,6 +37,7 @@ export interface MeasurementDrawingToolbarProps
   extends React.HTMLAttributes<HTMLDivElement> {
   activeMode: MeasurementDrawingMode;
   onModeChange: (mode: MeasurementDrawingMode) => void;
+  onClose?: () => void;
   onClear?: () => void;
   onFinish?: () => void;
   canFinish?: boolean;
@@ -58,6 +59,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
       className,
       activeMode,
       onModeChange,
+      onClose,
       onClear,
       onFinish,
       canFinish = false,
@@ -103,7 +105,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
       cn(
         'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95',
         isActive
-          ? 'bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/30 font-semibold hover:bg-primary/95'
+          ? 'bg-blue-600 text-white rounded-xl shadow-sm hover:bg-blue-700 font-semibold'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
       );
 
@@ -112,14 +114,14 @@ export const MeasurementDrawingToolbar = React.forwardRef<
         <div
           ref={ref}
           className={cn(
-            'absolute z-30 flex items-center gap-1 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-black/5 dark:border-white/10 p-1.5 transition-all',
+            'absolute z-30 flex items-center gap-1 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/10 p-1.5 transition-all',
             orientation === 'vertical' ? 'flex-col' : 'flex-row',
             position ? positionClasses[position] : '',
             className
           )}
           {...props}
         >
-          {/* Measurement Group */}
+          {/* Measurement Group: Ruler (distance), Maximize2 (area) */}
           <div className="flex items-center gap-1">
             {/* Distance Measurement */}
             <Tooltip>
@@ -159,7 +161,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
             )}
           />
 
-          {/* Drawing Group */}
+          {/* Drawing Group: Point (pin), Line (spline), Polygon (hexagon) */}
           <div className="flex items-center gap-1">
             {/* Point / Marker */}
             <Tooltip>
@@ -227,7 +229,7 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                     {pointsCount} pt{pointsCount > 1 ? 's' : ''}
                   </Badge>
                 ) : (
-                  <span className="text-[11px] text-muted-foreground animate-pulse">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300 px-1 select-none">
                     {clickToStartText}
                   </span>
                 )}
@@ -274,7 +276,13 @@ export const MeasurementDrawingToolbar = React.forwardRef<
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    onClick={() => onModeChange('none')}
+                    onClick={() => {
+                      if (onClose) {
+                        onClose();
+                      } else {
+                        onModeChange('none');
+                      }
+                    }}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95 transition-all"
                     aria-label={exitToolLabel}
                   >

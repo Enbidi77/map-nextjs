@@ -202,8 +202,8 @@ export const FloatingMapControls = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          'absolute z-30 flex gap-1 p-1 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-black/5 dark:border-white/10 transition-all duration-200',
-          orientation === 'vertical' ? 'flex-col' : 'flex-row items-center',
+          'absolute z-30 flex gap-1 p-1 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/10 transition-all duration-200',
+          orientation === 'vertical' ? 'flex-col items-center' : 'flex-row items-center',
           position ? positionClasses[position] : '',
           className
         )}
@@ -291,7 +291,7 @@ export const FloatingMapControls = React.forwardRef<
           />
         )}
 
-        {/* Geolocation */}
+        {/* Geolocation: Vibrant solid blue rounded-xl button when active */}
         {showGeolocate && onGeolocate && (
           <MapControlButton
             label={findLocationLabel}
@@ -299,6 +299,10 @@ export const FloatingMapControls = React.forwardRef<
             loading={isLocating}
             active={isLocationActive}
             onClick={onGeolocate}
+            className={cn(
+              isLocationActive &&
+                'bg-blue-600 text-white shadow-sm hover:bg-blue-700 rounded-xl focus-visible:ring-blue-500'
+            )}
             icon={<Locate className="h-4 w-4" />}
           />
         )}

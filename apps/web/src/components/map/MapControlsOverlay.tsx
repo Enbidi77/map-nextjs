@@ -4,12 +4,12 @@ import * as React from 'react';
 import {
   FloatingMapControls,
   CoordinateBadge,
+  NorthCompass,
   LayerSelector,
   DEFAULT_MAP_STYLES,
 } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useTranslation } from '../../features/i18n';
-import { useResponsive } from '../../hooks/useMediaQuery';
 import type { MapRenderer } from '@modern-maps/map-engine';
 import type { Coordinate } from '@modern-maps/types';
 
@@ -27,11 +27,8 @@ export function MapControlsOverlay({
   onToggleLayerSelector,
 }: MapControlsOverlayProps) {
   const { t } = useTranslation();
-  const { isMobile } = useResponsive();
   const camera = useMapStore((state) => state.camera);
   const setCamera = useMapStore((state) => state.setCamera);
-  const sidebarOpen = useMapStore((state) => state.sidebarOpen);
-  const sidebarWidth = useMapStore((state) => state.sidebarWidth);
   const activeStyle = useMapStore((state) => state.activeStyle);
   const setActiveStyle = useMapStore((state) => state.setActiveStyle);
   const overlays = useMapStore((state) => state.overlays);
@@ -40,7 +37,6 @@ export function MapControlsOverlay({
   const isLocating = useMapStore((state) => state.isLocating);
   const setIsLocating = useMapStore((state) => state.setIsLocating);
   const setUserLocation = useMapStore((state) => state.setUserLocation);
-  const userLocation = useMapStore((state) => state.userLocation);
 
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -164,7 +160,7 @@ export function MapControlsOverlay({
       {/* Floating Control Buttons (Top-Right) */}
       <FloatingMapControls
         position="top-right"
-        className="top-16 right-4 sm:top-18"
+        className="top-18 right-4 sm:top-20"
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         bearing={camera.bearing}
@@ -172,7 +168,7 @@ export function MapControlsOverlay({
         is3D={is3D}
         onToggle3D={handleToggle3D}
         isLocating={isLocating}
-        isLocationActive={!!userLocation}
+        isLocationActive={true}
         onGeolocate={handleGeolocate}
         isFullscreen={isFullscreen}
         onToggleFullscreen={handleToggleFullscreen}
@@ -195,7 +191,7 @@ export function MapControlsOverlay({
 
       {/* Layer & Style Picker Popover (positioned next to controls) */}
       {isLayerSelectorOpen && (
-        <div className="absolute top-16 right-16 z-30 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-20 right-16 z-30 animate-in fade-in zoom-in-95 duration-200">
           <LayerSelector
             styles={DEFAULT_MAP_STYLES}
             activeStyleId={activeStyle}
@@ -216,11 +212,18 @@ export function MapControlsOverlay({
         </div>
       )}
 
-      {/* Coordinate & Scale Readout Badge (Bottom-Left) dynamically offset from floating sidebar */}
-      <div
-        className="absolute bottom-5 z-20 pointer-events-auto transition-[left] duration-300 ease-in-out"
-        style={{ left: sidebarOpen && !isMobile ? `${sidebarWidth + 24}px` : '16px' }}
-      >
+      {/* Bottom-Left: Floating NorthCompass black circle button ('N') */}
+      <div className="absolute bottom-5 left-4 z-20 pointer-events-auto">
+        <NorthCompass
+          bearing={camera.bearing}
+          pitch={camera.pitch}
+          onResetNorth={handleResetBearing}
+          tooltipSide="right"
+        />
+      </div>
+
+      {/* Bottom-Center: Floating Coordinate Badge Pill */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
         <CoordinateBadge
           longitude={lng}
           latitude={lat}

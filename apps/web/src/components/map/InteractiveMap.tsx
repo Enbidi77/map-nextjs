@@ -549,6 +549,7 @@ export function InteractiveMap({
       <MeasurementDrawingToolbar
         activeMode={activeToolMode}
         onModeChange={(mode) => setActiveToolMode(mode)}
+        onClose={() => setActiveToolMode('none')}
         onClear={clearToolPoints}
         onFinish={() => {
           setActiveToolMode('none');

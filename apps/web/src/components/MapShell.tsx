@@ -3,7 +3,7 @@
 import * as React from 'react';
 import dynamic from 'next/dynamic';
 import { TopNavBar } from './layout/TopNavBar';
-import { ResizableSidebar } from './layout/ResizableSidebar';
+import { FloatingMapCards } from './layout/FloatingMapCards';
 import { MobileBottomSheet } from './mobile/MobileBottomSheet';
 import { useUrlSync } from '../hooks/useUrlSync';
 
@@ -45,8 +45,8 @@ export function MapShell() {
         onToggleLayerSelector={() => setIsLayerSelectorOpen((prev) => !prev)}
       />
 
-      {/* Desktop / Tablet Resizable Sidebar */}
-      <ResizableSidebar />
+      {/* Desktop / Tablet Floating Map Cards Architecture */}
+      <FloatingMapCards />
 
       {/* Mobile Viewport Responsive Bottom Sheet */}
       <MobileBottomSheet />

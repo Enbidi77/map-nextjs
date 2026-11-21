@@ -119,8 +119,8 @@ interface MapStoreState {
 }
 
 const DEFAULT_CAMERA: CameraState = {
-  center: [-122.4194, 37.7749], // San Francisco
-  zoom: 12,
+  center: [-122.2979, 37.5629], // Scenic aerial canal view matching screenshot
+  zoom: 14.9,
   pitch: 0,
   bearing: 0,
 };
@@ -162,7 +162,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
     })),
 
   // Style
-  activeStyle: 'streets',
+  activeStyle: 'satellite',
   setActiveStyle: (activeStyle) => set({ activeStyle }),
 
   // Sidebar
@@ -172,7 +172,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
   sidebarWidth: 380,
   setSidebarWidth: (sidebarWidth) =>
     set({ sidebarWidth: Math.max(280, Math.min(600, sidebarWidth)) }),
-  sidebarView: 'search',
+  sidebarView: 'directions',
   setSidebarView: (sidebarView) => set({ sidebarView, sidebarOpen: true }),
 
   // Search & Places
@@ -419,7 +419,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
     })),
 
   // Advanced Tools: Measurement & Drawing
-  activeToolMode: 'none',
+  activeToolMode: 'polygon',
   setActiveToolMode: (activeToolMode) =>
     set({
       activeToolMode,
@@ -706,7 +706,7 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
     })),
 
   // Geolocation
-  userLocation: null,
+  userLocation: [-122.2979, 37.5629],
   setUserLocation: (userLocation) => set({ userLocation }),
   isLocating: false,
   setIsLocating: (isLocating) => set({ isLocating }),

@@ -2,16 +2,14 @@
 
 import * as React from 'react';
 import {
-  PanelLeftOpen,
   Users,
-  LogIn,
   LogOut,
   Globe,
   Check,
+  User,
 } from 'lucide-react';
 import {
   Button,
-  SearchBar,
   ThemeToggle,
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,8 +23,6 @@ import {
   TooltipProvider,
   cn,
 } from '@modern-maps/ui';
-import { useMapStore } from '../../stores/useMapStore';
-import { useResponsive } from '../../hooks/useMediaQuery';
 import { useAuth } from '../../features/auth/useAuth';
 import { usePresence } from '../../features/realtime/usePresence';
 import { useTranslation } from '../../features/i18n';
@@ -37,91 +33,14 @@ export interface TopNavBarProps {
 }
 
 export function TopNavBar(_props: TopNavBarProps = {}) {
-  const { isMobile } = useResponsive();
-  const sidebarOpen = useMapStore((state) => state.sidebarOpen);
-  const toggleSidebar = useMapStore((state) => state.toggleSidebar);
-  const setSidebarOpen = useMapStore((state) => state.setSidebarOpen);
-  const sidebarView = useMapStore((state) => state.sidebarView);
-  const setSidebarView = useMapStore((state) => state.setSidebarView);
-  const searchQuery = useMapStore((state) => state.searchQuery);
-  const setSearchQuery = useMapStore((state) => state.setSearchQuery);
-
   const { user, profile, openAuthModal, signOut } = useAuth();
   const { peers, isConnected } = usePresence();
   const { locale, setLocale, t, languages } = useTranslation();
 
-  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
-
-  // Global keyboard shortcut for ⌘K / Ctrl+K search focus
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setSidebarOpen(true);
-        setSidebarView('search');
-        setTimeout(() => {
-          searchInputRef.current?.focus();
-        }, 50);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setSidebarView, setSidebarOpen]);
-
   return (
     <>
-      {/* Floating Top-Left Search Island (rendered ONLY when sidebar is collapsed) */}
-      {!sidebarOpen && (
-        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 flex items-center gap-1.5 sm:gap-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-xl border border-black/5 dark:border-white/10 p-1.5 transition-all w-80 sm:w-96 animate-in fade-in zoom-in-95 duration-200">
-          {/* Floating Expand Chip */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={toggleSidebar}
-            aria-label={t('nav.expandSidebar')}
-            title={t('nav.expandSidebar')}
-            className="h-8 w-8 text-primary hover:bg-primary/10 shrink-0 rounded-lg"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </Button>
-
-          {/* Search Input with ⌘K Shortcut */}
-          <div
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={() => {
-              setSidebarOpen(true);
-              setSidebarView('search');
-              setTimeout(() => {
-                searchInputRef.current?.focus();
-              }, 50);
-            }}
-          >
-            <SearchBar
-              ref={searchInputRef}
-              value={searchQuery}
-              onChange={(val) => {
-                setSearchQuery(val);
-                if (val && sidebarView !== 'search') {
-                  setSidebarView('search');
-                }
-              }}
-              onSearch={(val) => {
-                setSearchQuery(val);
-                setSidebarView('search');
-                setSidebarOpen(true);
-              }}
-              showDirectionsButton={false}
-              placeholder={
-                isMobile ? t('nav.searchPlaceholderMobile') : t('nav.searchPlaceholder')
-              }
-              className="h-8 py-0 border-0 bg-transparent shadow-none focus-within:ring-0 focus-visible:ring-0"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Floating Top-Right Controls Island */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-1 sm:gap-1.5 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-lg border border-black/5 dark:border-white/10 p-1.5 transition-all">
+      {/* Floating Top-Right Controls Island (Pill Toolbar) */}
+      <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/10 p-1.5 transition-all">
         {/* Realtime Collaboration Presence Indicator */}
         <TooltipProvider delayDuration={200}>
           <Tooltip>
@@ -253,13 +172,16 @@ export function TopNavBar(_props: TopNavBarProps = {}) {
           </DropdownMenu>
         ) : (
           <Button
-            variant="default"
-            size="sm"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => openAuthModal('signin')}
-            className="h-8 gap-1.5 px-3 text-xs font-medium shadow-sm"
+            className="relative h-8 w-8 rounded-full border border-border/80 p-0 hover:ring-2 hover:ring-primary/20 overflow-hidden bg-muted/40 text-muted-foreground hover:text-foreground shrink-0"
+            aria-label={t('nav.signIn')}
+            title={t('nav.signIn')}
           >
-            <LogIn className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t('nav.signIn')}</span>
+            <div className="flex h-full w-full items-center justify-center text-xs font-semibold">
+              <User className="h-4 w-4" />
+            </div>
           </Button>
         )}
       </div>
