@@ -1,6 +1,14 @@
 # Modern Maps & Location Intelligence Platform
 
-A high-performance, modular geospatial analytics and interactive mapping platform built with Next.js 14+, MapLibre GL, Supabase, PostGIS, and Turf.js.
+A high-performance, modular geospatial analytics and interactive mapping platform built with Next.js 15, React 19, MapLibre GL 5, Supabase, PostGIS, Drizzle ORM, and Turf.js.
+
+## 📚 Documentation
+
+- [System Architecture](docs/ARCHITECTURE.md) — Monorepo design, frontend state/layout, map engine, and database adapter resolution
+- [API Reference](docs/API_REFERENCE.md) — Next.js App Router API endpoints (`/api/search`, `/api/geocode`, `/api/directions`, `/api/places/*`, `/api/saved-places`, `/api/collections`, `/api/map-features/*`)
+- [Packages Reference](docs/PACKAGES.md) — All 12 `@modern-maps/*` workspace packages and shared commands
+- [Setup & Operating Guide](docs/SETUP_GUIDE.md) — Remote Supabase linking, migrations, storage buckets, and local runbook
+- [Swarm Agents Guide](AGENTS.md) — Multi-agent architecture and workspace conventions
 
 ---
 
@@ -10,14 +18,18 @@ The platform is architected as a pnpm workspace orchestrated with Turborepo:
 
 ```
 ├── apps/
-│   └── web/                   # Next.js 14+ interactive mapping web app (App Router, SSR, Realtime)
+│   └── web/                   # Next.js 15 interactive mapping web app (App Router, SSR, Realtime, i18n)
+├── docs/                      # Architecture, API reference, package docs, and setup guide
 ├── packages/
-│   ├── config/                # Shared TypeScript, ESLint, and PostCSS configurations
+│   ├── config/                # Shared TypeScript configurations
 │   ├── types/                 # Universal geospatial domain types & interfaces
 │   ├── validation/            # Zod validation schemas for locations, queries & routes
 │   ├── geospatial/            # Turf.js mathematical & geospatial algorithms wrapper
-│   ├── map-engine/            # MapLibre GL wrapper, viewport manager, camera, layer engine
 │   ├── map-data/              # Map tile providers, geocoding & directions adapters
+│   ├── map-engine/            # MapLibre GL wrapper, viewport manager, camera, layer & drawing engine
+│   ├── place-search/          # Place search & geocoding service (Nominatim, Photon, TTL cache)
+│   ├── routing/               # Turn-by-turn routing service (OSRM + mock fallback + cache)
+│   ├── database/              # Drizzle schema & multi-adapter client (Postgres, Supabase, In-Memory)
 │   ├── supabase/              # Typed Supabase client, queries, mutations, realtime & storage
 │   ├── ui/                    # Accessible UI component library & map widgets (Radix + Tailwind)
 │   └── testing/               # Vitest test configurations, shared mocks & fixture datasets
@@ -257,12 +269,16 @@ pnpm lint
 
 | Package | Purpose |
 |---|---|
+| **`@modern-maps/config`** | Shared TypeScript configurations (`tsconfig.base.json`, `tsconfig.next.json`, `tsconfig.node.json`, `tsconfig.react.json`). |
+| **`@modern-maps/database`** | Drizzle ORM schema, spatial/CRUD queries, and multi-adapter client (Postgres, Supabase, In-Memory). |
+| **`@modern-maps/place-search`** | Place search & geocoding service (`PlaceSearchService`) with Nominatim, Photon, and TTL caching. |
+| **`@modern-maps/routing`** | Turn-by-turn routing service (`RoutingService`) with OSRM, mock fallback, and 15-minute caching. |
 | **`@modern-maps/supabase`** | Supabase client setup, typed query builders, mutations, realtime channels & storage manager. |
-| **`@modern-maps/map-data`** | Tile provider adapters (Carto, OSM, MapLibre), geocoding & directions routing clients. |
+| **`@modern-maps/map-data`** | Tile provider adapters (Carto, OSM, ESRI, OpenTopoMap), geocoding & directions routing clients. |
 | **`@modern-maps/types`** | Universal geospatial domain types, GeoJSON interfaces, camera & viewport models. |
 | **`@modern-maps/validation`** | Runtime Zod validation schemas for locations, queries & inputs. |
-| **`@modern-maps/geospatial`** | Mathematical geospatial algorithms (Turf.js wrapper, Haversine, bearing, bounding boxes). |
-| **`@modern-maps/map-engine`** | MapLibre GL wrapper, viewport manager, camera transitions & clustering. |
+| **`@modern-maps/geospatial`** | Mathematical geospatial algorithms (Turf.js wrapper, Haversine, bearing, bounding boxes, polygon containment). |
+| **`@modern-maps/map-engine`** | MapLibre GL wrapper, viewport manager, camera transitions, drawing & measurement tools. |
 | **`@modern-maps/ui`** | Radix UI + Tailwind CSS component library with specialized map control overlays. |
 | **`@modern-maps/testing`** | Vitest configurations, MapLibre mocks & GeoJSON fixtures. |
 
