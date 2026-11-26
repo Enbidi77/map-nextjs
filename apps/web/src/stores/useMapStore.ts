@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { CameraState, Coordinate, PlaceModel, PlaceSearchResult } from '@modern-maps/types';
+import type { UserMapFeature, MapFeatureType } from '@modern-maps/database';
 import type { MeasurementDrawingMode } from '@modern-maps/ui';
 import { calculatePolygonArea, calculatePathLength } from '@modern-maps/geospatial';
 import { MOCK_PLACES } from '../data/mockPlaces';
@@ -102,6 +103,18 @@ interface MapStoreState {
   addToolPoint: (pt: Coordinate) => void;
   clearToolPoints: () => void;
 
+  // Persistent User Map Features & Spatial Polygon Search
+  savedFeatures: UserMapFeature[];
+  isLoadingFeatures: boolean;
+  activeSearchPolygon: Coordinate[][] | null;
+  fetchMapFeatures: () => Promise<void>;
+  saveDrawnFeature: (name: string, properties?: Record<string, unknown>) => Promise<UserMapFeature | null>;
+  deleteMapFeature: (id: string) => Promise<void>;
+  importGeoJSON: (geojson: unknown) => Promise<number>;
+  exportGeoJSON: () => string;
+  searchWithinPolygon: (polygon: Coordinate[][], category?: string | null) => Promise<void>;
+  clearSearchPolygon: () => void;
+
   // Directions
   directions: DirectionsState;
   setOrigin: (coord: Coordinate | null, name?: string) => void;
@@ -129,6 +142,7 @@ const DEFAULT_OVERLAYS: OverlayLayerState[] = [
   { id: 'places-layer', name: 'Points of Interest', visible: true, opacity: 1 },
   { id: '3d-buildings', name: '3D Building Extrusions', visible: true, opacity: 0.8 },
   { id: 'transit-lines', name: 'Transit & Ferry Routes', visible: true, opacity: 0.9 },
+  { id: 'user-features', name: 'Saved Drawings', visible: true, opacity: 0.85 },
 ];
 
 const INITIAL_COLLECTIONS: PlaceCollectionItem[] = [
@@ -468,6 +482,195 @@ export const useMapStore = create<MapStoreState>((set, get) => ({
       };
     }),
   clearToolPoints: () => set({ toolPoints: [], measurementValue: null }),
+
+  // Persistent User Map Features & Spatial Polygon Search
+  savedFeatures: [],
+  isLoadingFeatures: false,
+  activeSearchPolygon: null,
+  fetchMapFeatures: async () => {
+    set({ isLoadingFeatures: true });
+    try {
+      const res = await fetch('/api/map-features');
+      if (res.ok) {
+        const data = (await res.json()) as { features?: UserMapFeature[] };
+        set({ savedFeatures: data.features ?? [], isLoadingFeatures: false });
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not fetch map features:', err);
+    }
+    set({ isLoadingFeatures: false });
+  },
+  saveDrawnFeature: async (name, properties) => {
+    const { activeToolMode, toolPoints, measurementValue } = get();
+    if (activeToolMode === 'none' || toolPoints.length === 0) {
+      return null;
+    }
+
+    let featureType: MapFeatureType;
+    let geometry: Record<string, unknown>;
+
+    if (activeToolMode === 'point') {
+      featureType = 'point';
+      geometry = {
+        type: 'Point',
+        coordinates: toolPoints[0]!,
+      };
+    } else if (activeToolMode === 'line' || activeToolMode === 'distance') {
+      if (toolPoints.length < 2) return null;
+      featureType = 'linestring';
+      geometry = {
+        type: 'LineString',
+        coordinates: [...toolPoints],
+      };
+    } else if (activeToolMode === 'polygon' || activeToolMode === 'area') {
+      if (toolPoints.length < 3) return null;
+      featureType = 'polygon';
+      const first = toolPoints[0]!;
+      const last = toolPoints[toolPoints.length - 1]!;
+      const isClosed = first[0] === last[0] && first[1] === last[1];
+      const ring = isClosed ? [...toolPoints] : [...toolPoints, first];
+      geometry = {
+        type: 'Polygon',
+        coordinates: [ring],
+      };
+    } else {
+      return null;
+    }
+
+    const mergedProperties: Record<string, unknown> = {
+      ...(measurementValue ? { measurement: measurementValue } : {}),
+      ...(properties ?? {}),
+    };
+
+    try {
+      const res = await fetch('/api/map-features', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim() || `Drawn ${featureType}`,
+          featureType,
+          geojson: geometry,
+          properties: mergedProperties,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { feature?: UserMapFeature };
+        if (data.feature) {
+          set((state) => ({
+            savedFeatures: [...state.savedFeatures, data.feature!],
+            toolPoints: [],
+            measurementValue: null,
+            activeToolMode: 'none',
+          }));
+          return data.feature;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not save drawn feature:', err);
+    }
+    return null;
+  },
+  deleteMapFeature: async (id) => {
+    try {
+      const res = await fetch(`/api/map-features?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        set((state) => ({
+          savedFeatures: state.savedFeatures.filter((f) => f.id !== id),
+        }));
+      }
+    } catch (err) {
+      console.warn('Could not delete map feature:', err);
+    }
+  },
+  importGeoJSON: async (geojson) => {
+    try {
+      const res = await fetch('/api/map-features/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ geojson }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as {
+          features?: UserMapFeature[];
+          importedCount?: number;
+        };
+        const incoming = data.features ?? [];
+        set((state) => {
+          const existingIds = new Set(state.savedFeatures.map((f) => f.id));
+          const merged = [
+            ...state.savedFeatures,
+            ...incoming.filter((f) => !existingIds.has(f.id)),
+          ];
+          return { savedFeatures: merged };
+        });
+        return data.importedCount ?? incoming.length;
+      }
+    } catch (err) {
+      console.warn('Could not import GeoJSON:', err);
+    }
+    return 0;
+  },
+  exportGeoJSON: () => {
+    const features = get().savedFeatures.map((f) => {
+      const raw = f.geojson as Record<string, unknown>;
+      const geometry =
+        raw && raw.type === 'Feature' && raw.geometry ? raw.geometry : raw;
+      return {
+        type: 'Feature' as const,
+        id: f.id,
+        geometry,
+        properties: {
+          name: f.name,
+          featureType: f.featureType,
+          ...(f.properties ?? {}),
+        },
+      };
+    });
+    return JSON.stringify(
+      {
+        type: 'FeatureCollection',
+        features,
+      },
+      null,
+      2
+    );
+  },
+  searchWithinPolygon: async (polygon, category) => {
+    const effectiveCategory =
+      category !== undefined ? category : get().selectedCategory;
+    set({
+      activeSearchPolygon: polygon,
+      isSearching: true,
+      isViewportOutOfSync: false,
+      sidebarView: 'search',
+      sidebarOpen: true,
+    });
+    try {
+      const res = await fetch('/api/places/within-polygon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          polygon,
+          category: effectiveCategory,
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { results?: PlaceSearchResult[] };
+        set({
+          liveSearchResults: data.results ?? [],
+          isSearching: false,
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not search within polygon:', err);
+    }
+    set({ isSearching: false });
+  },
+  clearSearchPolygon: () => set({ activeSearchPolygon: null }),
 
   // Directions
   directions: {

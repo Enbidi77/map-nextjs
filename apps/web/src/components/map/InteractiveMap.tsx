@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, Search, Check, X } from 'lucide-react';
 import { MapContainer, type MapRenderer } from '@modern-maps/map-engine';
 import { MeasurementDrawingToolbar } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
@@ -77,6 +77,26 @@ export function InteractiveMap({
   const toolPoints = useMapStore((state) => state.toolPoints);
   const addToolPoint = useMapStore((state) => state.addToolPoint);
   const clearToolPoints = useMapStore((state) => state.clearToolPoints);
+
+  // Persistent Saved User Features & Spatial Search
+  const savedFeatures = useMapStore((state) => state.savedFeatures);
+  const fetchMapFeatures = useMapStore((state) => state.fetchMapFeatures);
+  const saveDrawnFeature = useMapStore((state) => state.saveDrawnFeature);
+  const searchWithinPolygon = useMapStore((state) => state.searchWithinPolygon);
+
+  const [isNamingDrawing, setIsNamingDrawing] = React.useState(false);
+  const [drawingName, setDrawingName] = React.useState('');
+  const [isSavingDrawing, setIsSavingDrawing] = React.useState(false);
+
+  React.useEffect(() => {
+    fetchMapFeatures();
+  }, [fetchMapFeatures]);
+
+  React.useEffect(() => {
+    if (activeToolMode === 'none') {
+      setIsNamingDrawing(false);
+    }
+  }, [activeToolMode]);
 
   // Synchronize camera state from MapContainer and detect viewport drift
   const handleCameraChange = React.useCallback(
@@ -502,8 +522,174 @@ export function InteractiveMap({
           native.setLayoutProperty('places-poi-halo', 'visibility', vis);
         }
       }
+
+      if (overlay.id === 'user-features') {
+        const vis = overlay.visible ? 'visible' : 'none';
+        const opacity = overlay.opacity ?? 0.85;
+        if (native.getLayer?.('saved-user-features-fill')) {
+          native.setLayoutProperty('saved-user-features-fill', 'visibility', vis);
+          native.setPaintProperty?.('saved-user-features-fill', 'fill-opacity', 0.25 * opacity);
+        }
+        if (native.getLayer?.('saved-user-features-line')) {
+          native.setLayoutProperty('saved-user-features-line', 'visibility', vis);
+          native.setPaintProperty?.('saved-user-features-line', 'line-opacity', opacity);
+        }
+        if (native.getLayer?.('saved-user-features-circle')) {
+          native.setLayoutProperty('saved-user-features-circle', 'visibility', vis);
+          native.setPaintProperty?.('saved-user-features-circle', 'circle-opacity', opacity);
+          native.setPaintProperty?.('saved-user-features-circle', 'circle-stroke-opacity', opacity);
+        }
+      }
     });
   }, [mapInstance, overlays]);
+
+  // Synchronize Saved User Features on MapLibre GeoJSON source/layers
+  React.useEffect(() => {
+    if (!mapInstance) return;
+    const native = mapInstance.getNativeMap() as MapLibreMap | null;
+    if (!native) return;
+
+    const setupSavedFeaturesLayers = () => {
+      try {
+        const userOverlay = useMapStore
+          .getState()
+          .overlays.find((o) => o.id === 'user-features');
+        const vis = userOverlay?.visible === false ? 'none' : 'visible';
+        const opacity = userOverlay?.opacity ?? 0.85;
+
+        const features: GeoJSONFeature[] = [];
+        for (const item of savedFeatures) {
+          const raw = item.geojson as Record<string, unknown> | undefined;
+          if (!raw) continue;
+          const geometry =
+            raw.type === 'Feature' && raw.geometry
+              ? (raw.geometry as GeoJSONFeature['geometry'])
+              : (raw as unknown as GeoJSONFeature['geometry']);
+          if (!geometry || typeof geometry !== 'object' || !('type' in geometry)) continue;
+
+          features.push({
+            type: 'Feature',
+            id: item.id,
+            properties: {
+              id: item.id,
+              name: item.name,
+              featureType: item.featureType,
+              ...(item.properties ?? {}),
+            },
+            geometry,
+          });
+        }
+
+        const fc: GeoJSONFeatureCollection = {
+          type: 'FeatureCollection',
+          features,
+        };
+
+        const existingSource = native.getSource('saved-user-features') as
+          | { setData?: (data: unknown) => void }
+          | undefined;
+        if (existingSource && typeof existingSource.setData === 'function') {
+          existingSource.setData(fc);
+        } else if (!existingSource) {
+          native.addSource('saved-user-features', {
+            type: 'geojson',
+            data: fc as any,
+          });
+        }
+
+        if (!native.getLayer('saved-user-features-fill')) {
+          native.addLayer({
+            id: 'saved-user-features-fill',
+            type: 'fill',
+            source: 'saved-user-features',
+            filter: ['==', '$type', 'Polygon'],
+            layout: { visibility: vis },
+            paint: {
+              'fill-color': '#8b5cf6',
+              'fill-opacity': 0.25 * opacity,
+            },
+          });
+        }
+
+        if (!native.getLayer('saved-user-features-line')) {
+          native.addLayer({
+            id: 'saved-user-features-line',
+            type: 'line',
+            source: 'saved-user-features',
+            filter: ['any', ['==', '$type', 'LineString'], ['==', '$type', 'Polygon']],
+            layout: { 'line-join': 'round', 'line-cap': 'round', visibility: vis },
+            paint: {
+              'line-color': '#7c3aed',
+              'line-width': 2.5,
+              'line-opacity': opacity,
+            },
+          });
+        }
+
+        if (!native.getLayer('saved-user-features-circle')) {
+          native.addLayer({
+            id: 'saved-user-features-circle',
+            type: 'circle',
+            source: 'saved-user-features',
+            filter: ['==', '$type', 'Point'],
+            layout: { visibility: vis },
+            paint: {
+              'circle-radius': 6,
+              'circle-color': '#7c3aed',
+              'circle-stroke-width': 2,
+              'circle-stroke-color': '#ffffff',
+              'circle-opacity': opacity,
+              'circle-stroke-opacity': opacity,
+            },
+          });
+        }
+      } catch {
+        // ignore if style is not ready yet
+      }
+    };
+
+    if (native.isStyleLoaded?.()) {
+      setupSavedFeaturesLayers();
+    } else {
+      native.once?.('load', setupSavedFeaturesLayers);
+      native.on?.('styledata', setupSavedFeaturesLayers);
+    }
+
+    return () => {
+      native.off?.('styledata', setupSavedFeaturesLayers);
+    };
+  }, [mapInstance, savedFeatures, activeStyle]);
+
+  const handleOpenSavePopover = React.useCallback(() => {
+    const label = activeToolMode !== 'none' ? `Drawn ${activeToolMode}` : 'Drawing';
+    setDrawingName(label);
+    setIsNamingDrawing(true);
+  }, [activeToolMode]);
+
+  const handleConfirmSaveDrawing = React.useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (isSavingDrawing) return;
+      setIsSavingDrawing(true);
+      try {
+        await saveDrawnFeature(drawingName.trim() || `Drawn ${activeToolMode}`);
+        setIsNamingDrawing(false);
+        setDrawingName('');
+      } finally {
+        setIsSavingDrawing(false);
+      }
+    },
+    [activeToolMode, drawingName, isSavingDrawing, saveDrawnFeature]
+  );
+
+  const handleSearchInsideArea = React.useCallback(() => {
+    if (toolPoints.length < 3) return;
+    const first = toolPoints[0]!;
+    const last = toolPoints[toolPoints.length - 1]!;
+    const isClosed = first[0] === last[0] && first[1] === last[1];
+    const ring = isClosed ? [...toolPoints] : [...toolPoints, first];
+    searchWithinPolygon([ring], useMapStore.getState().selectedCategory);
+  }, [searchWithinPolygon, toolPoints]);
 
   return (
     <div
@@ -551,9 +737,7 @@ export function InteractiveMap({
         onModeChange={(mode) => setActiveToolMode(mode)}
         onClose={() => setActiveToolMode('none')}
         onClear={clearToolPoints}
-        onFinish={() => {
-          setActiveToolMode('none');
-        }}
+        onFinish={handleOpenSavePopover}
         canClear={toolPoints.length > 0}
         canFinish={
           ((activeToolMode === 'distance' || activeToolMode === 'line') && toolPoints.length >= 2) ||
@@ -576,6 +760,53 @@ export function InteractiveMap({
           close: t('measure.close'),
         }}
       />
+
+      {/* Inline Save Drawing Name Popover */}
+      {isNamingDrawing && (
+        <form
+          onSubmit={handleConfirmSaveDrawing}
+          className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-xl border border-black/10 dark:border-white/15 bg-white/95 dark:bg-slate-900/95 px-3 py-2 shadow-xl backdrop-blur-md"
+        >
+          <input
+            type="text"
+            value={drawingName}
+            onChange={(e) => setDrawingName(e.target.value)}
+            placeholder="Name this drawing..."
+            autoFocus
+            className="h-7 w-44 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            type="submit"
+            disabled={isSavingDrawing}
+            className="inline-flex h-7 items-center gap-1 rounded-md bg-primary px-2.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
+          >
+            <Check className="h-3.5 w-3.5" />
+            <span>{isSavingDrawing ? 'Saving...' : 'Save'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsNamingDrawing(false)}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+            aria-label="Cancel"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </form>
+      )}
+
+      {/* Floating "Search inside area" pill when drawing a polygon/area >= 3 points */}
+      {(activeToolMode === 'polygon' || activeToolMode === 'area') && toolPoints.length >= 3 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+          <button
+            type="button"
+            onClick={handleSearchInsideArea}
+            className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Search inside area</span>
+          </button>
+        </div>
+      )}
 
       {/* Floating Controls Overlay */}
       <MapControlsOverlay

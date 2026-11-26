@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Loader2, MapPin, Landmark, Trees, Utensils, Film } from 'lucide-react';
+import { Search, Loader2, MapPin, Landmark, Trees, Utensils, Film, X, Shapes } from 'lucide-react';
 import { PlaceCard, Badge, Button } from '@modern-maps/ui';
 import { useMapStore } from '../../stores/useMapStore';
 import { useTranslation } from '../../features/i18n';
@@ -18,6 +18,9 @@ export function SearchPanel() {
   const setDestination = useMapStore((state) => state.setDestination);
   const liveSearchResults = useMapStore((state) => state.liveSearchResults);
   const isSearching = useMapStore((state) => state.isSearching);
+  const activeSearchPolygon = useMapStore((state) => state.activeSearchPolygon);
+  const clearSearchPolygon = useMapStore((state) => state.clearSearchPolygon);
+  const executeSearch = useMapStore((state) => state.executeSearch);
 
   const categories = [
     { id: 'all', label: t('search.all'), icon: MapPin },
@@ -59,6 +62,29 @@ export function SearchPanel() {
         {/* Soft right-edge fade gradient to hint at scrollability */}
         <div className="pointer-events-none absolute right-0 top-0 bottom-1.5 w-8 bg-gradient-to-l from-background to-transparent" />
       </div>
+
+      {/* Active Polygon Spatial Filter Banner */}
+      {activeSearchPolygon && (
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 text-primary font-medium">
+            <Shapes className="h-3.5 w-3.5 shrink-0" />
+            <span>Filtering within drawn area</span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 px-2 text-[11px] font-medium text-primary hover:bg-primary/15 hover:text-primary"
+            onClick={() => {
+              clearSearchPolygon();
+              executeSearch(searchQuery, selectedCategory);
+            }}
+          >
+            <X className="h-3 w-3" />
+            <span>Clear</span>
+          </Button>
+        </div>
+      )}
 
       {/* Results Header */}
       <div className="flex items-center justify-between px-0.5">
